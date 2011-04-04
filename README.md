@@ -1,4 +1,5 @@
-==Drew's Mixins==
+Drew's Mixins
+=============
 
 ### doThese
 
@@ -7,7 +8,7 @@ and being notified when they are *all* done.
 This should be used when you need to be notified when a group of async functions have completed.
 (Like when you have to know when to send an http response.)
 Here is a contrived example of why you would want this.
-You'll have to assume that a bunch of variables exist like 'PhotoAPI' and 'db' for this example.
+You'll have to assume that a bunch of variables exist like `PhotoAPI` and `db` for this example.
 
     todos =
       photos: (done) ->
