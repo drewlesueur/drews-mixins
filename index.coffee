@@ -1,4 +1,7 @@
 _.mixin
+  #simple substring/slice functionality
+  # for arrays and strings
+  # very similar to php's subst and php's array_slice 
   s: (val, start, end) ->
     need_to_join = false
     ret = []
@@ -48,28 +51,58 @@ _.mixin
   capitalize: (str) ->
     str.charAt(0).toUpperCase() + str.substring(1).toLowerCase();
 
+  # this is just a wrapper for setTimeout.
+  # it puts the miliseconds first to sits more
+  # natural to write in coffeescript
 
-# Drew LeSueur @drewlesueur
+  wait: (miliseconds, func) ->
+    setTimeout func, miliseconds
+
+  interval : (miliseconds, func) ->
+    setInterval func, miliseconds
+
+  compareArrays: (left, right) ->
+    #not yet optimized
+    inLeftNotRight = []
+    inRightNotLeft = []
+    inBoth = []
+    for item in left
+      if item in right
+        inBoth.push item
+      else
+        inLeftNotRight.push item
+
+    for item in right
+      if item not in left
+        inRightNotLeft.push item 
+
+    return [inLeftNotRight, inRightNotLeft, inBoth]
+
+  pacManMapMaker: (left, right, top, bottom) ->
+    # todo make a little map maker 
+
+
+
+
 # An abstraction for calling multiple asynchronous
 # functions at once, and calling a callback 
 # with the "return values" of all functions
 # when they are all done.
 # requires underscore.js
 
-_.mixin # underscore.js mixin
-  doThese: (to_dos, callback) ->
-    return_values = if _.isArray(to_dos) then [] else {}
-    make_jobs_done = (id) ->
+  doThese: (todos, callback) ->
+    returnValues = if _.isArray(todos) then [] else {}
+    makeJobsDone = (id) ->
       return (ret) ->
-        return_values[id] = ret
-        all_done = true
-        _.each to_dos, (func, id) ->
-          if not(id of return_values)
-            all_done = false
+        returnValues[id] = ret
+        allDone = true
+        _.each todos, (func, id) ->
+          if not(id of returnValues)
+            allDone = false
             #_.breakLoop()
-        if all_done is true
-          callback(return_values)
-    _.each to_dos, (to_do, id) ->
-      jobs_done = make_jobs_done(id)
-      to_do(jobs_done)
+        if allDone is true
+          callback(returnValues)
+    _.each todos, (todo, id) ->
+      jobsDone = makeJobsDone(id)
+      todo(jobsDone)
 
