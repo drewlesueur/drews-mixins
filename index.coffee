@@ -5,17 +5,41 @@ _.mixin
   # when they are all done.
 
   doThese: (todos, callback) ->
-    returnValues = if _.isArray(todos) then [] else {}
+    values = if _.isArray(todos) then [] else {}
+    errors = _.clone values 
     length = if _.isArray(todos) then todos.length else _.keys(todos).length
     doneCount = 0
-    makeJobsDone = (id) ->
+    makeError = (id) ->
+      (err) ->
+        doneCount += 1
+        errors[id] = err
+        if doneCount is length
+          callback errors, values
+    makeDone = (id) ->
       (ret) ->
         doneCount += 1
-        returnValues[id] = ret
+        values[id] = ret
         if doneCount is length
-          callback(returnValues)
+          if _.isEmpty(errors) then errors = null
+          callback errors, values
     _.each todos, (todo, id) ->
-      todo makeJobsDone id
+      todo makeError(id), makeDone(id)
+
+  # method for handling errors more easily
+  # instead of allways having to say `if err then ...`
+  # You can use this error handler
+  # see the tests for an examle usage
+  errorHelper: (errorFunc, callback) ->
+    makeHandler = (func) ->
+      (err, results...) ->
+        if err then return errorFunc err
+        func results...
+    if callback
+      makeHandler callback
+    else
+      makeHandler
+
+    
 
   #simple substring/slice functionality
   # for arrays and strings

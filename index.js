@@ -1,5 +1,5 @@
 (function() {
-  var __indexOf = Array.prototype.indexOf || function(item) {
+  var __slice = Array.prototype.slice, __indexOf = Array.prototype.indexOf || function(item) {
     for (var i = 0, l = this.length; i < l; i++) {
       if (this[i] === item) return i;
     }
@@ -7,22 +7,53 @@
   };
   _.mixin({
     doThese: function(todos, callback) {
-      var doneCount, length, makeJobsDone, returnValues;
-      returnValues = _.isArray(todos) ? [] : {};
+      var doneCount, errors, length, makeDone, makeError, values;
+      values = _.isArray(todos) ? [] : {};
+      errors = _.clone(values);
       length = _.isArray(todos) ? todos.length : _.keys(todos).length;
       doneCount = 0;
-      makeJobsDone = function(id) {
+      makeError = function(id) {
+        return function(err) {
+          doneCount += 1;
+          errors[id] = err;
+          if (doneCount === length) {
+            return callback(errors, values);
+          }
+        };
+      };
+      makeDone = function(id) {
         return function(ret) {
           doneCount += 1;
-          returnValues[id] = ret;
+          values[id] = ret;
           if (doneCount === length) {
-            return callback(returnValues);
+            if (_.isEmpty(errors)) {
+              errors = null;
+            }
+            return callback(errors, values);
           }
         };
       };
       return _.each(todos, function(todo, id) {
-        return todo(makeJobsDone(id));
+        return todo(makeError(id), makeDone(id));
       });
+    },
+    errorHelper: function(errorFunc, callback) {
+      var makeHandler;
+      makeHandler = function(func) {
+        return function() {
+          var err, results;
+          err = arguments[0], results = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+          if (err) {
+            return errorFunc(err);
+          }
+          return func.apply(null, results);
+        };
+      };
+      if (callback) {
+        return makeHandler(callback);
+      } else {
+        return makeHandler;
+      }
     },
     s: function(val, start, end) {
       var need_to_join, ret;
