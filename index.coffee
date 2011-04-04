@@ -1,4 +1,22 @@
 _.mixin
+  # An abstraction for calling multiple asynchronous
+  # functions at once, and calling a callback 
+  # with the "return values" of all functions
+  # when they are all done.
+
+  doThese: (todos, callback) ->
+    returnValues = if _.isArray(todos) then [] else {}
+    length = if _.isArray(todos) then todos.length else _.keys(todos).length
+    doneCount = 0
+    makeJobsDone = (id) ->
+      (ret) ->
+        doneCount += 1
+        returnValues[id] = ret
+        if doneCount is length
+          callback(returnValues)
+    _.each todos, (todo, id) ->
+      todo makeJobsDone id
+
   #simple substring/slice functionality
   # for arrays and strings
   # very similar to php's subst and php's array_slice 
@@ -52,7 +70,7 @@ _.mixin
     str.charAt(0).toUpperCase() + str.substring(1).toLowerCase();
 
   # this is just a wrapper for setTimeout.
-  # it puts the miliseconds first to sits more
+  # it puts the miliseconds first to it's more
   # natural to write in coffeescript
 
   wait: (miliseconds, func) ->
@@ -83,26 +101,4 @@ _.mixin
 
 
 
-
-# An abstraction for calling multiple asynchronous
-# functions at once, and calling a callback 
-# with the "return values" of all functions
-# when they are all done.
-# requires underscore.js
-
-  doThese: (todos, callback) ->
-    returnValues = if _.isArray(todos) then [] else {}
-    makeJobsDone = (id) ->
-      return (ret) ->
-        returnValues[id] = ret
-        allDone = true
-        _.each todos, (func, id) ->
-          if not(id of returnValues)
-            allDone = false
-            #_.breakLoop()
-        if allDone is true
-          callback(returnValues)
-    _.each todos, (todo, id) ->
-      jobsDone = makeJobsDone(id)
-      todo(jobsDone)
 

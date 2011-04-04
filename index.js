@@ -6,6 +6,24 @@
     return -1;
   };
   _.mixin({
+    doThese: function(todos, callback) {
+      var doneCount, length, makeJobsDone, returnValues;
+      returnValues = _.isArray(todos) ? [] : {};
+      length = _.isArray(todos) ? todos.length : _.keys(todos).length;
+      doneCount = 0;
+      makeJobsDone = function(id) {
+        return function(ret) {
+          doneCount += 1;
+          returnValues[id] = ret;
+          if (doneCount === length) {
+            return callback(returnValues);
+          }
+        };
+      };
+      return _.each(todos, function(todo, id) {
+        return todo(makeJobsDone(id));
+      });
+    },
     s: function(val, start, end) {
       var need_to_join, ret;
       need_to_join = false;
@@ -93,30 +111,6 @@
       }
       return [inLeftNotRight, inRightNotLeft, inBoth];
     },
-    pacManMapMaker: function(left, right, top, bottom) {},
-    doThese: function(todos, callback) {
-      var makeJobsDone, returnValues;
-      returnValues = _.isArray(todos) ? [] : {};
-      makeJobsDone = function(id) {
-        return function(ret) {
-          var allDone;
-          returnValues[id] = ret;
-          allDone = true;
-          _.each(todos, function(func, id) {
-            if (!(id in returnValues)) {
-              return allDone = false;
-            }
-          });
-          if (allDone === true) {
-            return callback(returnValues);
-          }
-        };
-      };
-      return _.each(todos, function(todo, id) {
-        var jobsDone;
-        jobsDone = makeJobsDone(id);
-        return todo(jobsDone);
-      });
-    }
+    pacManMapMaker: function(left, right, top, bottom) {}
   });
 }).call(this);

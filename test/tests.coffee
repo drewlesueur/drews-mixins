@@ -32,4 +32,5 @@ $(document).ready () ->
       equal ret.two, 2
       equal ret.three, "3 seconds"
       equal ret.one, 1
+      start()
       

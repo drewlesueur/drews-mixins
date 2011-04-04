@@ -38,7 +38,8 @@
       return _.doThese(todos, function(ret) {
         equal(ret.two, 2);
         equal(ret.three, "3 seconds");
-        return equal(ret.one, 1);
+        equal(ret.one, 1);
+        return start();
       });
     });
   });
