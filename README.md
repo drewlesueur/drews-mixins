@@ -66,9 +66,7 @@ A simple error handler function can help.
         VideoAPI.getVideo "myacctnumber", _.errorHelper err, (videos) ->
           done videos
       profile: (err, done) ->
-        # if you leave out the second argument,
-        # you get a function that you can pass what would have been the
-        # second parameter
+        # if you leave out the second argument, you get a function that you can pass what would have been the second argument
         handle = _.errorHelper(err)
         db.connect "mydb", handle (connection) ->
           connection.query "SELECT * FROM PROFILE WHERE ID = ?", ['drew'], handle (results) ->
