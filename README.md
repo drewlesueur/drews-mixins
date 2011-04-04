@@ -1,6 +1,6 @@
 Drew's Mixins
 =============
-
+see tests at [http://drews-mixins.the.tl/test/test.html](http://drews-mixins.the.tl/test/test.html)
 ### doThese
 
 The `doThese` mixin is for calling a bunch of asyncronous funcitons
