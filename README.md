@@ -54,7 +54,6 @@ Here is an example of doing it the wrong way.
     
 Here you get a continuous chain of callbacks that is slower and harder to reason over.
 
-
 ##errorHelper
 But hang on, all this error handling is getting too repetative.
 A simple error handler function can help.
@@ -75,13 +74,13 @@ A simple error handler function can help.
           connection.query "SELECT * FROM PROFILE WHERE ID = ?", ['drew'], handle (results) ->
             done results
       
-   errorResponse = (res, error) ->
-     res.send error
+     errorResponse = (res, error) ->
+       res.send error
 
-    _.doThese todos, _.errorHelper errorResponse, (values) ->
-      res.send
-        media: [values.photos, values.videos]
-        info: values.profile
+     _.doThese todos, _.errorHelper errorResponse, (values) ->
+       res.send
+         media: [values.photos, values.videos]
+         info: values.profile
 
 
         
