@@ -24,7 +24,7 @@ You'll have to assume that a bunch of variables exist like `PhotoAPI` and `db` f
 
     _.doThese todos, (values) ->
       #this callback gets exacuted when they are all done
-      req.send
+      res.send
         media: [values.photos, values.videos]
         info: values.profile
 
