@@ -37,14 +37,20 @@
         return todo(makeError(id), makeDone(id));
       });
     },
-    errorHelper: function(errorFunc, callback) {
-      var makeHandler;
+    hanlde: function(errorFunc, callback) {
+      var extraArgs, makeHandler;
+      if (_.isArray(errorFunc)) {
+        extraArgs = _.s(errorFunc, 1);
+        errorFunc = errorFunc[0];
+      } else {
+        extraArgs = [];
+      }
       makeHandler = function(func) {
         return function() {
           var err, results;
           err = arguments[0], results = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
           if (err) {
-            return errorFunc(err);
+            return errorFunc.apply(null, [err].concat(__slice.call(extraArgs)));
           }
           return func.apply(null, results);
         };

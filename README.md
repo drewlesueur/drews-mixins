@@ -54,28 +54,28 @@ Here is an example of doing it the wrong way.
     
 Here you get a continuous chain of callbacks that is slower and harder to reason over.
 
-##errorHelper
+##handle
 But hang on, all this error handling is getting too repetative.
 A simple error handler function can help.
     
     todos =
       photos: (err, done) ->
-        PhotoAPI.getPhoto "drew", _.errorHelper err, (photos) ->
+        PhotoAPI.getPhoto "drew", _.handle err, (photos) ->
           done photos
       videos: (err, done) ->
-        VideoAPI.getVideo "myacctnumber", _.errorHelper err, (videos) ->
+        VideoAPI.getVideo "myacctnumber", _.handle err, (videos) ->
           done videos
       profile: (err, done) ->
         # if you leave out the second argument, you get a function that you can pass what would have been the second argument
-        handle = _.errorHelper(err)
+        handle = _.handle(err)
         db.connect "mydb", handle (connection) ->
           connection.query "SELECT * FROM PROFILE WHERE ID = ?", ['drew'], handle (results) ->
             done results
       
-     errorResponse = (res, error) ->
+     errorResponse = (error, res) ->
        res.send error
 
-     _.doThese todos, _.errorHelper errorResponse, (values) ->
+     _.doThese todos, _.handle [errorResponse, res], (values) ->
        res.send
          media: [values.photos, values.videos]
          info: values.profile

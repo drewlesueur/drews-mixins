@@ -29,10 +29,15 @@ _.mixin
   # instead of allways having to say `if err then ...`
   # You can use this error handler
   # see the tests for an examle usage
-  errorHelper: (errorFunc, callback) ->
+  hanlde: (errorFunc, callback) ->
+    if _.isArray errorFunc
+      extraArgs = _.s errorFunc, 1
+      errorFunc = errorFunc[0]
+    else
+      extraArgs = []
     makeHandler = (func) ->
       (err, results...) ->
-        if err then return errorFunc err
+        if err then return errorFunc err, extraArgs...
         func results...
     if callback
       makeHandler callback

@@ -71,7 +71,7 @@ $(document).ready () ->
       equal errors[0], "there was an error"
       equal results.length, 0
       start()
-    causesError _.errorHelper err, (result) ->
+    causesError _.hanlde err, (result) ->
       results.push result
       equal true, false # should never get here
       start()
@@ -79,19 +79,49 @@ $(document).ready () ->
   asyncTest "error helper with error alternate", () ->
     errors = []
     results = []
-
     err = (error) ->
       errors.push error
       equal errors.length, 1
       equal errors[0], "there was an error"
       equal results.length, 0
       start()
-    causesError _.errorHelper(err) (result) ->
+    causesError _.hanlde(err) (result) ->
       result.push result
       equal true, false # should never get here
       start()
 
 
+  asyncTest "error helper with error and extra param ", () ->
+    errors = []
+    results = []
+    err = (error, extra...) ->
+      errors.push error
+      equal errors.length, 1
+      equal errors[0], "there was an error"
+      equal results.length, 0
+      equal extra[0], "extra"
+      equal extra[1], "params"
+      start()
+    causesError _.hanlde [err, "extra", "params" ], (result) ->
+      results.push result
+      equal true, false # should never get here
+      start()
+
+  asyncTest "error helper with error alternate and extra param", () ->
+    errors = []
+    results = []
+    err = (error, extra...) ->
+      errors.push error
+      equal errors.length, 1
+      equal errors[0], "there was an error"
+      equal results.length, 0
+      equal extra[0], "extra"
+      equal extra[1], "params"
+      start()
+    causesError _.hanlde([err, "extra", "params"]) (result) ->
+      result.push result
+      equal true, false # should never get here
+      start()
 
   asyncTest "error helper good ", () ->
     errors = []
@@ -100,7 +130,7 @@ $(document).ready () ->
       errors.push error
       equal true, false # should never get here
       start()
-    doesntCauseError _.errorHelper err, (result, result2) ->
+    doesntCauseError _.hanlde err, (result, result2) ->
       results.push result
       equal results.length, 1
       equal results[0], "success"
@@ -116,7 +146,7 @@ $(document).ready () ->
       errors.push error
       equal true, false # should never get here
       start()
-    doesntCauseError _.errorHelper(err) (result, result2) ->
+    doesntCauseError _.hanlde(err) (result, result2) ->
       results.push result
       equal results.length, 1
       equal results[0], "success"

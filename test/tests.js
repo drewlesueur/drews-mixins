@@ -4,7 +4,7 @@
       if (this[i] === item) return i;
     }
     return -1;
-  };
+  }, __slice = Array.prototype.slice;
   $(document).ready(function() {
     var causesError, doesntCauseError, wait1, wait1Error, wait2, wait3;
     module("My mixins");
@@ -92,7 +92,7 @@
         equal(results.length, 0);
         return start();
       };
-      return causesError(_.errorHelper(err, function(result) {
+      return causesError(_.hanlde(err, function(result) {
         results.push(result);
         equal(true, false);
         return start();
@@ -109,7 +109,49 @@
         equal(results.length, 0);
         return start();
       };
-      return causesError(_.errorHelper(err)(function(result) {
+      return causesError(_.hanlde(err)(function(result) {
+        result.push(result);
+        equal(true, false);
+        return start();
+      }));
+    });
+    asyncTest("error helper with error and extra param ", function() {
+      var err, errors, results;
+      errors = [];
+      results = [];
+      err = function() {
+        var error, extra;
+        error = arguments[0], extra = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+        errors.push(error);
+        equal(errors.length, 1);
+        equal(errors[0], "there was an error");
+        equal(results.length, 0);
+        equal(extra[0], "extra");
+        equal(extra[1], "params");
+        return start();
+      };
+      return causesError(_.hanlde([err, "extra", "params"], function(result) {
+        results.push(result);
+        equal(true, false);
+        return start();
+      }));
+    });
+    asyncTest("error helper with error alternate and extra param", function() {
+      var err, errors, results;
+      errors = [];
+      results = [];
+      err = function() {
+        var error, extra;
+        error = arguments[0], extra = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+        errors.push(error);
+        equal(errors.length, 1);
+        equal(errors[0], "there was an error");
+        equal(results.length, 0);
+        equal(extra[0], "extra");
+        equal(extra[1], "params");
+        return start();
+      };
+      return causesError(_.hanlde([err, "extra", "params"])(function(result) {
         result.push(result);
         equal(true, false);
         return start();
@@ -124,7 +166,7 @@
         equal(true, false);
         return start();
       };
-      return doesntCauseError(_.errorHelper(err, function(result, result2) {
+      return doesntCauseError(_.hanlde(err, function(result, result2) {
         results.push(result);
         equal(results.length, 1);
         equal(results[0], "success");
@@ -142,7 +184,7 @@
         equal(true, false);
         return start();
       };
-      return doesntCauseError(_.errorHelper(err)(function(result, result2) {
+      return doesntCauseError(_.hanlde(err)(function(result, result2) {
         results.push(result);
         equal(results.length, 1);
         equal(results[0], "success");
