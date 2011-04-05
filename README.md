@@ -9,7 +9,10 @@ This should be used when you need to be notified when a group of async functions
 (Like when you have to know when to send an http response.)
 Here is a contrived example of why you would want this.
 You'll have to assume that a bunch of variables exist like `PhotoAPI` and `db` for this example.
-
+    # todos is an object whos values are async functions
+    # the functions don't use `return` to return data,
+    # they use `done` or `err` instead so control is
+    # asynchronous
     todos =
       photos: (err, done) ->
         PhotoAPI.getPhoto "drew", (photoError, photos) ->
@@ -26,7 +29,9 @@ You'll have to assume that a bunch of variables exist like `PhotoAPI` and `db` f
             if dbError then return err dbError
             done results
       
-
+    # `doThese` takes the `todos` object and then
+    # a callback that is called when all the async functions
+    # in `todos` are completed
     _.doThese todos, (errors, values) ->
       #this callback gets executed when they are all done
       if errors then return res.send errors
