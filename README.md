@@ -80,5 +80,26 @@ A simple error handler function can help.
          media: [values.photos, values.videos]
          info: values.profile
 
+##doTheseSync
+The `doTheseSync` mixin is like `doThese` except that it calls
+each asynchronous funciton in a syncronous chain; that is it
+waits
+for the first function to complete (either done or errored)
+before it calls the next one. Because order is important, you
+should use an array of `todos`.
+
+    todos = [
+      (err, next) ->
+        hoverOverFileMenu _.handle err, (event) ->
+          next()
+      (err, next) ->
+        scrollToExit _.handle err, (event) ->
+          next()
+      (err, next) ->
+        clickExit _.handle err, (event) ->
+          next()
+    ]
+    _.doTheseSync todos, (errors, values) ->
+      alert "are you sure you want to exit?"
 
         
