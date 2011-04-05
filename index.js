@@ -37,6 +37,35 @@
         return todo(makeError(id), makeDone(id));
       });
     },
+    doTheseSync: function(todos, callback) {
+      var doneCount, err, errors, length, next, values;
+      values = _.isArray(todos) ? [] : {};
+      errors = _.clone(values);
+      length = _.isArray(todos) ? todos.length : _.keys(todos).length;
+      doneCount = 0;
+      err = function(ret) {
+        errors[doneCount] = ret;
+        doneCount += 1;
+        if (doneCount === length) {
+          return callback(errors, values);
+        } else {
+          return todos[doneCount](err, next);
+        }
+      };
+      next = function(ret) {
+        values[doneCount] = ret;
+        doneCount += 1;
+        if (doneCount === length) {
+          if (_.isEmpty(errors)) {
+            errors = null;
+          }
+          return callback(errors, values);
+        } else {
+          return todos[doneCount](err, next);
+        }
+      };
+      return todos[0](err, next);
+    },
     hanlde: function(errorFunc, callback) {
       var extraArgs, makeHandler;
       if (_.isArray(errorFunc)) {

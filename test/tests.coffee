@@ -26,15 +26,44 @@ $(document).ready () ->
   doesntCauseError = (func) ->
     _.wait 100, () -> func null, "success", "you did it"
 
-  
+  acceptableOff = 40 
 
   asyncTest "doThese", () ->
-        
+    startTime = _.time()
     _.doThese [wait2, wait1, wait3], (err, ret) ->
       equal err, null
       equal ret[0], 2
       equal ret[1], 1
       equal ret[2], "3 seconds"
+      diff = _.time() - startTime - 300
+      equal diff > -acceptableOff, true
+      equal diff < acceptableOff, true, "within #{diff} off"
+      start()
+
+  asyncTest "doTheseSync", () ->
+    todos =  [wait1, wait2, wait3]
+    startTime = _.time()
+    _.doTheseSync todos, (errors, values) ->
+      diff = _.time() - startTime - 600
+      equal errors, null
+      equal values[0], 1
+      equal values[1], 2
+      equal values[2], "3 seconds"
+      equal diff > -acceptableOff, true
+      equal diff < acceptableOff, true, "within #{diff} off"
+      start()
+
+  asyncTest "doTheseSync with error", () ->
+    todos =  [wait1Error, wait2, wait3]
+    startTime = _.time()
+    _.doTheseSync todos, (errors, values) ->
+      equal errors.length, 1
+      equal (1 not in values), true 
+      equal values[1], 2
+      equal values[2], "3 seconds"
+      diff = _.time() - startTime - 600
+      equal diff > -acceptableOff, true
+      equal diff < acceptableOff, true, "within #{diff} off"
       start()
 
   asyncTest "doThese with object", () ->
@@ -153,5 +182,8 @@ $(document).ready () ->
       equal result2, "you did it"
       equal errors.length, 0
       start()
+
+
+      
 
 

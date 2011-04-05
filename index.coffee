@@ -25,6 +25,31 @@ _.mixin
     _.each todos, (todo, id) ->
       todo makeError(id), makeDone(id)
 
+
+  doTheseSync: (todos, callback) ->
+    values = if _.isArray(todos) then [] else {}
+    errors = _.clone values 
+    length = if _.isArray(todos) then todos.length else _.keys(todos).length
+    doneCount = 0
+    err = (ret) ->
+      errors[doneCount] = ret
+      doneCount += 1
+      if doneCount is length
+        callback errors, values
+      else
+        todos[doneCount] err, next
+    next = (ret) ->
+      values[doneCount] = ret
+      doneCount += 1
+      if doneCount is length
+        if _.isEmpty(errors) then errors = null
+        callback errors, values
+      else
+        todos[doneCount] err, next
+    todos[0] err, next
+
+
+    
   # method for handling errors more easily
   # instead of allways having to say `if err then ...`
   # You can use this error handler

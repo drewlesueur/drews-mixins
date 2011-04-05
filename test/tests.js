@@ -6,7 +6,7 @@
     return -1;
   }, __slice = Array.prototype.slice;
   $(document).ready(function() {
-    var causesError, doesntCauseError, wait1, wait1Error, wait2, wait3;
+    var acceptableOff, causesError, doesntCauseError, wait1, wait1Error, wait2, wait3;
     module("My mixins");
     wait2 = function(err, done) {
       return _.wait(200, function() {
@@ -42,12 +42,51 @@
         return func(null, "success", "you did it");
       });
     };
+    acceptableOff = 40;
     asyncTest("doThese", function() {
+      var startTime;
+      startTime = _.time();
       return _.doThese([wait2, wait1, wait3], function(err, ret) {
+        var diff;
         equal(err, null);
         equal(ret[0], 2);
         equal(ret[1], 1);
         equal(ret[2], "3 seconds");
+        diff = _.time() - startTime - 300;
+        equal(diff > -acceptableOff, true);
+        equal(diff < acceptableOff, true, "within " + diff + " off");
+        return start();
+      });
+    });
+    asyncTest("doTheseSync", function() {
+      var startTime, todos;
+      todos = [wait1, wait2, wait3];
+      startTime = _.time();
+      return _.doTheseSync(todos, function(errors, values) {
+        var diff;
+        diff = _.time() - startTime - 600;
+        equal(errors, null);
+        equal(values[0], 1);
+        equal(values[1], 2);
+        equal(values[2], "3 seconds");
+        equal(diff > -acceptableOff, true);
+        equal(diff < acceptableOff, true, "within " + diff + " off");
+        return start();
+      });
+    });
+    asyncTest("doTheseSync with error", function() {
+      var startTime, todos;
+      todos = [wait1Error, wait2, wait3];
+      startTime = _.time();
+      return _.doTheseSync(todos, function(errors, values) {
+        var diff;
+        equal(errors.length, 1);
+        equal((__indexOf.call(values, 1) < 0), true);
+        equal(values[1], 2);
+        equal(values[2], "3 seconds");
+        diff = _.time() - startTime - 600;
+        equal(diff > -acceptableOff, true);
+        equal(diff < acceptableOff, true, "within " + diff + " off");
         return start();
       });
     });
