@@ -3,7 +3,7 @@ Drew's Mixins
 see tests at [http://drews-mixins.the.tl/test/test.html](http://drews-mixins.the.tl/test/test.html)
 ### doThese
 
-The `doThese` mixin is for calling a bunch of asyncronous funcitons
+The `doThese` mixin is for calling a bunch of asynchronous funcitons
 and being notified when they are *all* done.
 This should be used when you need to be notified when a group of async functions have completed.
 (Like when you have to know when to send an http response.)
