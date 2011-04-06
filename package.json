@@ -9,6 +9,9 @@
     "url": "git://github.com/drewlesueur/drews-mixins.git"
   },
   "author": "Drew LeSueur <drewalex@gmail.com> (http://twitter.com/drewlesueur)",
+  "dependencies": {
+    "underscore": ">=1.0.0"
+  },
   "main": "drews-mixins.js",
   "engines": {
     "node": "*"
