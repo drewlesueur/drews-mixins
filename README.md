@@ -9,8 +9,8 @@ This should be used when you need to be notified when a group of async functions
 (Like when you have to know when to send an http response.)
 Here is a contrived example of why you would want this.
 You'll have to assume that a bunch of variables exist like `PhotoAPI` and `db` for this example.
-    # todos is an object whos values are async functions
-    # the functions don't use `return` to return data,
+    # `todos` is an object whose values are async functions.
+    # The functions don't use `return` to return data,
     # they use `done` or `err` instead so control is
     # asynchronous
     todos =

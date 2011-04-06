@@ -1,0 +1,15 @@
+{
+  "name": "drews-mixins",
+  "description": "A couple underscore.js mixins",
+  "version": "0.1.0",
+  "homepage": "http://drews-mixins.the.tl/test/test.html",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/drewlesueur/drews-mixins.git"
+  },
+  "author": "Drew LeSueur <drewalex@gmail.com> (http://twitter.com/drewlesueur)",
+  "main": "drews-mixins.js",
+  "engines": {
+    "node": "*"
+  }
+}
