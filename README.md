@@ -1,10 +1,13 @@
 Drew's Mixins
 =============
-see tests at [http://drews-mixins.the.tl/test/test.html](http://drews-mixins.the.tl/test/test.html)
+`drews-mixins` is a library of underscore.js mixins. You can
+use it both in node.js and in the browser.
 
-To install `npm install drews-mixins`
+See tests at [http://drews-mixins.the.tl/test/test.html](http://drews-mixins.the.tl/test/test.html)
 
-Node.js example usage (in coffeescript)
+To install for node.js `npm install drews-mixins`
+
+node.js example usage (in coffeescript)
 
     _ = require "underscore"
     require "drews-mixins"
