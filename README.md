@@ -1,6 +1,16 @@
 Drew's Mixins
 =============
 see tests at [http://drews-mixins.the.tl/test/test.html](http://drews-mixins.the.tl/test/test.html)
+
+To install `npm install drews-mixins`
+
+Node.js example usage (in coffeescript)
+
+    _ = require "underscore"
+    require "drews-mixins"
+    _.s "the s is a substring", 0, 5 #--> "the s"
+
+
 ### doThese
 
 The `doThese` mixin is for calling a bunch of asynchronous funcitons
