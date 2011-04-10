@@ -214,7 +214,7 @@
         return start();
       }));
     });
-    return asyncTest("error helper good  alternate", function() {
+    asyncTest("error helper good  alternate", function() {
       var err, errors, results;
       errors = [];
       results = [];
@@ -231,6 +231,17 @@
         equal(errors.length, 0);
         return start();
       }));
+    });
+    return test("Populate Array", function() {
+      var obj;
+      obj = {};
+      _.populateArray(obj, "info", "the value");
+      _.populateArray(obj, "info", "another");
+      equal(obj.info[0], "the value", "populating blank array");
+      equal(obj.info[1], "another", "populating existing array");
+      obj.there = [];
+      _.populateArray(obj, "there", "stuff");
+      return equal(obj.there[0], "stuff", "array existed from the get-go");
     });
   });
 }).call(this);

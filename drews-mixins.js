@@ -181,9 +181,15 @@
       },
       pacManMapMaker: function(left, right, top, bottom) {
         return 1;
+      },
+      populateArray: function(obj, key, value) {
+        if (!_.isArray(obj[key])) {
+          obj[key] = [];
+        }
+        return obj[key].push(value);
       }
     };
-    if (module && module.exports) {
+    if ((typeof module != "undefined" && module !== null ? module.exports : void 0) != null) {
       module.exports = drewsMixins;
     }
     if (typeof _ != "undefined" && _ !== null) {

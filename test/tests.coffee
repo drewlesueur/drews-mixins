@@ -183,7 +183,16 @@ $(document).ready () ->
       equal errors.length, 0
       start()
 
+  test "Populate Array", () ->
+    obj = {}
+    _.populateArray obj, "info", "the value"
+    _.populateArray obj, "info", "another"
+    equal obj.info[0], "the value", "populating blank array"
+    equal obj.info[1], "another", "populating existing array"
 
+    obj.there = []
+    _.populateArray obj, "there", "stuff"
+    equal obj.there[0], "stuff", "array existed from the get-go"
       
 
 

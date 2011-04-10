@@ -155,9 +155,14 @@ do () ->
       1
       # todo make a little map maker 
 
+    populateArray: (obj, key, value) ->
+      if not _.isArray obj[key]
+        obj[key] = []
+      obj[key].push value
+
     #module.exports
 
-  if module and module.exports
+  if module?.exports?
     module.exports = drewsMixins
   _?.mixin? drewsMixins
   root._?.mixin? drewsMixins
