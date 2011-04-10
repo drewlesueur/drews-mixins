@@ -165,5 +165,5 @@ do () ->
   if module?.exports?
     module.exports = drewsMixins
   _?.mixin? drewsMixins
-  root._?.mixin? drewsMixins
+  root?._?.mixin? drewsMixins
     

@@ -197,6 +197,6 @@
         _.mixin(drewsMixins);
       }
     }
-    return (_ref = root._) != null ? typeof _ref.mixin == "function" ? _ref.mixin(drewsMixins) : void 0 : void 0;
+    return typeof root != "undefined" && root !== null ? (_ref = root._) != null ? typeof _ref.mixin == "function" ? _ref.mixin(drewsMixins) : void 0 : void 0 : void 0;
   })();
 }).call(this);
