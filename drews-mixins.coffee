@@ -14,16 +14,6 @@ class AssertionError extends Error
     [@name + ':', @message].join ' '
 
 do () ->  
-  asyncFuncs = _.functions async
-  _functions = _.functions _
-  _async = {}
-  for func in asyncFuncs
-    if func in _functions
-      _async["async#{func}"] = async[func]
-    else
-      _async[func] = async[func]
-  if async?
-    _.mixin _async
   drewsMixins = 
     graceful: (errorFunc, callback) ->
       if _.isArray errorFunc
