@@ -1,3 +1,5 @@
+
+
 module "My mixins"
 
 
@@ -163,9 +165,41 @@ _.assertEqual _.getFailCount(), 4, "4 failed tests"
 _.assertEqual _.getPassCount(), 23, "23 passed tests. There was 21 but 2 more tests since" 
 
 
+
+fakeGetVideos = (url, done) ->
+  _.wait 100, -> done "no videos allowed"
+
+fakeGetPictures = (accountId, done) ->
+  _.wait 200, -> done null, ["pic1", "pic2"]
+
+
+fakeGetAudio = (tagName, done) ->
+  _.wait 300, -> done null, ["hello.wav"]
+
+
+tasks = 
+  videos: (done) ->
+    fakeGetVideos "http://.com", _.graceful done, (videos) ->
+      done null, videos
+  pics: (done) ->
+    fakeGetPictures "xyzzy", _.graceful done, (pics) ->
+      done null, pics
+  audio: (done) ->
+    fakeGetAudio "trees", _.graceful done, (audio) ->
+      done null, audio
+  
+      
+_.parallel tasks, (err, values) ->
+  _.assertEqual err, null, "final error should be null"
+  _.assertEqual values.videos, null, "videos should be null"
+  _.assertOk _.isEqual values.pics, ["pic1", "pic2"]
+  _.assertOk _.isEqual values.audio, ["hello.wav"]
+  
+
+
+
+
 console.log "#{_.getAssertCount()} tests ran. #{_.getFailCount()} tests failed.
-4 were supposed to fail because were testing the tests
+4 were supposed to fail because were testing the tests.
 "
-
-
 

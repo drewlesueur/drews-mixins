@@ -1,4 +1,4 @@
-var causesError, doesntCauseError;
+var causesError, doesntCauseError, fakeGetAudio, fakeGetPictures, fakeGetVideos, tasks;
 var __slice = Array.prototype.slice;
 module("My mixins");
 causesError = function(func) {
@@ -175,4 +175,42 @@ console.log("pass " + (_.getPassCount()) + ", fail " + (_.getFailCount()) + ", t
 _.assertEqual(_.getAssertCount(), 25, "There should be 25 tests");
 _.assertEqual(_.getFailCount(), 4, "4 failed tests");
 _.assertEqual(_.getPassCount(), 23, "23 passed tests. There was 21 but 2 more tests since");
-console.log("" + (_.getAssertCount()) + " tests ran. " + (_.getFailCount()) + " tests failed.4 were supposed to fail because were testing the tests");
+fakeGetVideos = function(url, done) {
+  return _.wait(100, function() {
+    return done("no videos allowed");
+  });
+};
+fakeGetPictures = function(accountId, done) {
+  return _.wait(200, function() {
+    return done(null, ["pic1", "pic2"]);
+  });
+};
+fakeGetAudio = function(tagName, done) {
+  return _.wait(300, function() {
+    return done(null, ["hello.wav"]);
+  });
+};
+tasks = {
+  videos: function(done) {
+    return fakeGetVideos("http://.com", _.graceful(done, function(videos) {
+      return done(null, videos);
+    }));
+  },
+  pics: function(done) {
+    return fakeGetPictures("xyzzy", _.graceful(done, function(pics) {
+      return done(null, pics);
+    }));
+  },
+  audio: function(done) {
+    return fakeGetAudio("trees", _.graceful(done, function(audio) {
+      return done(null, audio);
+    }));
+  }
+};
+_.parallel(tasks, function(err, values) {
+  _.assertEqual(err, null, "final error should be null");
+  _.assertEqual(values.videos, null, "videos should be null");
+  _.assertOk(_.isEqual(values.pics, ["pic1", "pic2"]));
+  return _.assertOk(_.isEqual(values.audio, ["hello.wav"]));
+});
+console.log("" + (_.getAssertCount()) + " tests ran. " + (_.getFailCount()) + " tests failed.4 were supposed to fail because were testing the tests.");

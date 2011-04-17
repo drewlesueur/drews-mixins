@@ -14,9 +14,16 @@ class AssertionError extends Error
     [@name + ':', @message].join ' '
 
 do () ->  
-
+  asyncFuncs = _.functions async
+  _functions = _.functions _
+  _async = {}
+  for func in asyncFuncs
+    if func in _functions
+      _async["async#{func}"] = async[func]
+    else
+      _async[func] = async[func]
   if async?
-    _.mixin async
+    _.mixin _async
   drewsMixins = 
     graceful: (errorFunc, callback) ->
       if _.isArray errorFunc
@@ -26,7 +33,9 @@ do () ->
         extraArgs = []
       makeHandler = (func) ->
         (err, results...) ->
-          if err then return errorFunc err, extraArgs...
+          if err
+            #return errorFunc null, err, extraArgs...
+            return errorFunc.apply null, null, null
           func results...
       if callback
         makeHandler callback

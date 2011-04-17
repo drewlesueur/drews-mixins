@@ -6,12 +6,12 @@ var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments)
   child.prototype = new ctor;
   child.__super__ = parent.prototype;
   return child;
-}, __slice = Array.prototype.slice, __indexOf = Array.prototype.indexOf || function(item) {
+}, __indexOf = Array.prototype.indexOf || function(item) {
   for (var i = 0, l = this.length; i < l; i++) {
     if (this[i] === item) return i;
   }
   return -1;
-};
+}, __slice = Array.prototype.slice;
 failCount = 0;
 passCount = 0;
 count = 0;
@@ -30,9 +30,20 @@ AssertionError = (function() {
   return AssertionError;
 })();
 (function() {
-  var drewsMixins, _ref;
+  var asyncFuncs, drewsMixins, func, _async, _functions, _i, _len, _ref;
+  asyncFuncs = _.functions(async);
+  _functions = _.functions(_);
+  _async = {};
+  for (_i = 0, _len = asyncFuncs.length; _i < _len; _i++) {
+    func = asyncFuncs[_i];
+    if (__indexOf.call(_functions, func) >= 0) {
+      _async["async" + func] = async[func];
+    } else {
+      _async[func] = async[func];
+    }
+  }
   if (typeof async != "undefined" && async !== null) {
-    _.mixin(async);
+    _.mixin(_async);
   }
   drewsMixins = {
     graceful: function(errorFunc, callback) {
@@ -48,7 +59,7 @@ AssertionError = (function() {
           var err, results;
           err = arguments[0], results = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
           if (err) {
-            return errorFunc.apply(null, [err].concat(__slice.call(extraArgs)));
+            return errorFunc.apply(null, null, null);
           }
           return func.apply(null, results);
         };
