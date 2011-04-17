@@ -14,64 +14,11 @@ class AssertionError extends Error
     [@name + ':', @message].join ' '
 
 do () ->  
-  
+
+  if async?
+    _.mixin async
   drewsMixins = 
-    # An abstraction for calling multiple asynchronous
-    # functions at once, and calling a callback 
-    # with the "return values" of all functions
-    # when they are all done.
-  
-    doThese: (todos, callback) ->
-      values = if _.isArray(todos) then [] else {}
-      errors = _.clone values 
-      length = if _.isArray(todos) then todos.length else _.keys(todos).length
-      doneCount = 0
-      makeError = (id) ->
-        (err) ->
-          doneCount += 1
-          errors[id] = err
-          if doneCount is length
-            callback errors, values
-      makeDone = (id) ->
-        (ret) ->
-          doneCount += 1
-          values[id] = ret
-          if doneCount is length
-            if _.isEmpty(errors) then errors = null
-            callback errors, values
-      _.each todos, (todo, id) ->
-        todo makeError(id), makeDone(id)
-
-
-    doTheseSync: (todos, callback) ->
-      values = if _.isArray(todos) then [] else {}
-      errors = _.clone values 
-      length = if _.isArray(todos) then todos.length else _.keys(todos).length
-      doneCount = 0
-      err = (ret) ->
-        errors[doneCount] = ret
-        doneCount += 1
-        if doneCount is length
-          callback errors, values
-        else
-          todos[doneCount] err, next
-      next = (ret) ->
-        values[doneCount] = ret
-        doneCount += 1
-        if doneCount is length
-          if _.isEmpty(errors) then errors = null
-          callback errors, values
-        else
-          todos[doneCount] err, next
-      todos[0] err, next
-
-
-      
-    # method for handling errors more easily
-    # instead of allways having to say `if err then ...`
-    # You can use this error handler
-    # see the tests for an examle usage
-    hanlde: (errorFunc, callback) ->
+    graceful: (errorFunc, callback) ->
       if _.isArray errorFunc
         extraArgs = _.s errorFunc, 1
         errorFunc = errorFunc[0]
@@ -85,7 +32,6 @@ do () ->
         makeHandler callback
       else
         makeHandler
-
       
 
     #simple substring/slice functionality
