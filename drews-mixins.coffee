@@ -1,4 +1,20 @@
+failCount = 0
+passCount = 0
+count = 0
+
+class AssertionError extends Error
+  constructor: (options) ->
+    @name = 'AssertionError'
+    @message = options.message
+    @actual = options.actual
+    @expected = options.expected
+    @operator = options.operator
+
+  toString: () =>
+    [@name + ':', @message].join ' '
+
 do () ->  
+  
   drewsMixins = 
     # An abstraction for calling multiple asynchronous
     # functions at once, and calling a callback 
@@ -119,7 +135,14 @@ do () ->
     trimRight: (obj) ->
       obj.toString().replace(/\s+$/, "")
     isNumeric: (str) ->
-      _.s(str, 0, 1).match(/\d/)
+      if _.isNumber(str)
+        return true
+      if _.s(str, 0, 1) == "-"
+        return true
+      if _.s(str, 0, 1).match(/\d/)
+        return true
+      else
+        return false
 
     capitalize: (str) ->
       str.charAt(0).toUpperCase() + str.substring(1).toLowerCase();
@@ -159,6 +182,40 @@ do () ->
       if not _.isArray obj[key]
         obj[key] = []
       obj[key].push value
+
+    getAssertCount: -> count
+    getFailCount: -> failCount
+    getPassCount: -> passCount
+      
+    assertFail: (actual, expected, message, operator, stackStartFunction) ->
+      failCount++
+      count++
+      e = 
+        message: message
+        actual: actual
+        expected: expected
+        operator: operator
+        stackStartFunction: stackStartFunction
+      console.log e
+      throw new AssertionError e
+    assertPass: (actual, expected, message, operator, stackStartFunction) ->
+      passCount++
+      count++
+    assertOk: (value, message) ->
+      if !!!value
+        _.assertFail value, true, message, '==', _.assertOk
+      else
+        _.assertPass value, true, message, "==", _.assertOk
+    assertEqual: (actual, expected, message) ->
+      if `actual != expected`
+        _.assertFail actual, expected, message, '==', _.assertEqual
+      else
+        _.assertPass actual, expected, message, "==", _.assertEqual
+    assertNotEqual: (actual, expected, message) ->
+      if `actual == expected`
+        _.assertFail actual, expected, message, '!=', _.assertNotEqual
+      else
+        _.assertPass actual, expected, message, '!=', _.assertNotEqual
 
     #module.exports
 
