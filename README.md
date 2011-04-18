@@ -10,7 +10,7 @@ To install for node.js `npm install drews-mixins`
 node.js example usage (in coffeescript)
 
     _ = require "underscore"
-    require "drews-mixins"
+    require("drews-mixins").mixinWith _
     _.s "the s is a substring", 0, 5 #--> "the s"
 
 
