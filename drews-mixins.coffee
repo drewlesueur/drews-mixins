@@ -1,3 +1,4 @@
+
 failCount = 0
 passCount = 0
 count = 0
@@ -162,10 +163,13 @@ do () ->
       else
         _.assertPass actual, expected, message, '!=', _.assertNotEqual
 
-    #module.exports
 
-  if module?.exports?
-    module.exports = drewsMixins
   _?.mixin? drewsMixins
-  root?._?.mixin? drewsMixins
-    
+  if module?.exports?
+    _ = ""
+    exports.mixinWith = (underscore) ->
+      _ = underscore
+      _.mixin drewsMixins
+    #root._ if root._ is defined in parent script
+   
+  
