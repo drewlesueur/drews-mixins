@@ -166,7 +166,6 @@ do () ->
 
   _?.mixin? drewsMixins
   if module?.exports?
-    _ = ""
     exports.mixinWith = (underscore) ->
       _ = underscore
       _.mixin drewsMixins
