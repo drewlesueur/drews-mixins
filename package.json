@@ -2,7 +2,7 @@
   "name": "drews-mixins",
   "keywords": ["underscore", "mixins", "mixin", "drew", "async", "asynchronous", "util"],
   "description": "A couple underscore.js mixins",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "homepage": "http://drews-mixins.the.tl/test/test.html",
   "repository": {
     "type": "git",
