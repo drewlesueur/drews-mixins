@@ -1,3 +1,5 @@
+drew = {}
+
 failCount = 0
 passCount = 0
 count = 0
@@ -11,9 +13,10 @@ class AssertionError extends Error
     @operator = options.operator
 
   toString: () =>
+    "test"
     [@name + ':', @message].join ' '
 
-goAndDo = (exports) ->  
+goAndDo = (exports, _) ->  
   exports.graceful = (errorFunc, callback) ->
     if _.isArray errorFunc
       extraArgs = _.s errorFunc, 1
@@ -147,19 +150,19 @@ goAndDo = (exports) ->
     count++
   exports.assertOk = (value, message) ->
     if !!!value
-      _.assertFail value, true, message, '==', _.assertOk
+      _.assertFail value, true, message, '==', exports.assertOk
     else
       _.assertPass value, true, message, "==", _.assertOk
   exports.assertEqual = (actual, expected, message) ->
     if `actual != expected`
-      _.assertFail actual, expected, message, '==', _.assertEqual
+      _.assertFail actual, expected, message, '==', exports.assertEqual
     else
-      _.assertPass actual, expected, message, "==", _.assertEqual
+      _.assertPass actual, expected, message, "==", exports.assertEqual
   exports.assertNotEqual = (actual, expected, message) ->
     if `actual == expected`
-      _.assertFail actual, expected, message, '!=', _.assertNotEqual
+      _.assertFail actual, expected, message, '!=', exports.assertNotEqual
     else
-      _.assertPass actual, expected, message, '!=', _.assertNotEqual
+      _.assertPass actual, expected, message, '!=', exports.assertNotEqual
 
 
 `
@@ -399,8 +402,17 @@ goAndDo = (exports) ->
         });
     };
 
-}(typeof exports === 'undefined' ? this._ = this._ || {}: exports));
+}(typeof exports === 'undefined' ? this._ = this._ || {}: drew));
+
 `
-goAndDo if typeof exports == 'undefined' then this._ = this._ || {} else exports
+
+if typeof exports  == 'undefined'
+  _ = this._ || {}
+  goAndDo drew, _
+  _.mixin drew
+else
+  module.exports = (_) ->
+    goAndDo drew, _
+    _.mixin drew
 
 #root._ if root._ is defined in parent script 

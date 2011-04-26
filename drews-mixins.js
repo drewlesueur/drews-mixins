@@ -1,5 +1,5 @@
 (function() {
-  var AssertionError, count, failCount, goAndDo, passCount;
+  var AssertionError, count, drew, failCount, goAndDo, passCount, _;
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }, __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
     for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
     function ctor() { this.constructor = child; }
@@ -13,6 +13,7 @@
     }
     return -1;
   };
+  drew = {};
   failCount = 0;
   passCount = 0;
   count = 0;
@@ -26,11 +27,11 @@
       this.operator = options.operator;
     }
     AssertionError.prototype.toString = function() {
-      return [this.name + ':', this.message].join(' ');
+      "test";      return [this.name + ':', this.message].join(' ');
     };
     return AssertionError;
   })();
-  goAndDo = function(exports) {
+  goAndDo = function(exports, _) {
     exports.graceful = function(errorFunc, callback) {
       var extraArgs, makeHandler;
       if (_.isArray(errorFunc)) {
@@ -190,23 +191,23 @@
     };
     exports.assertOk = function(value, message) {
       if (!!!value) {
-        return _.assertFail(value, true, message, '==', _.assertOk);
+        return _.assertFail(value, true, message, '==', exports.assertOk);
       } else {
         return _.assertPass(value, true, message, "==", _.assertOk);
       }
     };
     exports.assertEqual = function(actual, expected, message) {
       if (actual != expected) {
-        return _.assertFail(actual, expected, message, '==', _.assertEqual);
+        return _.assertFail(actual, expected, message, '==', exports.assertEqual);
       } else {
-        return _.assertPass(actual, expected, message, "==", _.assertEqual);
+        return _.assertPass(actual, expected, message, "==", exports.assertEqual);
       }
     };
     return exports.assertNotEqual = function(actual, expected, message) {
       if (actual == expected) {
-        return _.assertFail(actual, expected, message, '!=', _.assertNotEqual);
+        return _.assertFail(actual, expected, message, '!=', exports.assertNotEqual);
       } else {
-        return _.assertPass(actual, expected, message, '!=', _.assertNotEqual);
+        return _.assertPass(actual, expected, message, '!=', exports.assertNotEqual);
       }
     };
   };
@@ -447,7 +448,17 @@
         });
     };
 
-}(typeof exports === 'undefined' ? this._ = this._ || {}: exports));
+}(typeof exports === 'undefined' ? this._ = this._ || {}: drew));
+
 ;
-  goAndDo(typeof exports === 'undefined' ? this._ = this._ || {} : exports);
+  if (typeof exports === 'undefined') {
+    _ = this._ || {};
+    goAndDo(drew, _);
+    _.mixin(drew);
+  } else {
+    module.exports = function(_) {
+      goAndDo(drew, _);
+      return _.mixin(drew);
+    };
+  }
 }).call(this);
