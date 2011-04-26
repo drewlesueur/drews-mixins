@@ -10,8 +10,7 @@ To install for node.js `npm install drews-mixins`
 node.js example usage (in coffeescript)
 
     _ = require "underscore"
-    drews = require "drews-mixins"
-    _.mixin drews
+    require("drews-mixins") _
     _.s "the s is a substring", 0, 5 #--> "the s"
 
 I also embedded my fork of the extremely awesome nimble library
