@@ -1,8 +1,14 @@
 drew = {}
+#this project used to have async helpers until i found @caolan's
+#nimble project
+
+
+
 
 failCount = 0
 passCount = 0
 count = 0
+failedMessages = []
 
 class AssertionError extends Error
   constructor: (options) ->
@@ -16,7 +22,127 @@ class AssertionError extends Error
     "test"
     [@name + ':', @message].join ' '
 
+    # wait for
+###
+TODO: create a bind thing that uses the same api as backbone.js
+[cb, allDone] = doneMaker()
+async1 cb()
+async2 cb()
+async3 cb() 
+
+allDone () ->
+  alert "all done"
+
+#another --
+# every other time you call it?
+async4 done()
+
+
+async5 a=done()
+
+
+
+app.triggerCoolEvent()
+once app, "cooleventdone", () ->
+
+app.triggerCoolEvent()
+app.once "coolevent", () ->
+  doer something
+
+ 
+###
+
+
+
+
+
 goAndDo = (exports, _) ->  
+  exports.asyncEx = (len, cb) ->
+    _.wait len, -> cb null, len 
+
+  exports.asyncFail = (len, cb) ->
+    _.wait len, -> cb len
+    
+  exports.doneMaker = () ->
+    allDoneCallback = ->
+    results = []
+    allDone = (cb) ->
+      allDoneCallback = cb
+    id = _.uniqueId()
+    length = 0
+    doneLength = 0
+    live = true
+    done = () ->
+      myLength = length
+      length++ 
+      return do (myLength) -> (err, result) ->
+        if live is false then return
+        doneLength++
+        if err then allDoneCallback err, results
+        results[myLength] = result
+        if doneLength is length
+          allDoneCallback null, results
+          live = false
+    [done, allDone]
+          
+  
+  #think about old wrapper objects sometime
+
+  # some backbone.js-like events, consider using node.js like ones 
+  # compare backbones events with nodes events
+  # https://github.com/joyent/node/blob/master/lib/events.js
+  # https://github.com/documentcloud/backbone/blob/master/backbone.js
+  # https://github.com/maccman/spine/blob/master/spine.js
+
+
+  exports.on = (obj, ev, callback) ->
+    calls = obj._callbacks || obj._callbacks = {}
+    list = calls[ev] || (calls[ev] = {})
+    list.push callback
+    obj._events = obj._callbacks
+    obj
+  exports.removeListener = (obj, ev, callback) ->
+    if (!ev)
+      obj._callbacks = {}
+      obj._events = obj._callbacks
+    else if calls = obj._callbacks
+      if !callback
+        calls[ev] = []
+      else
+        list = calls[ev]
+        if !list then return obj
+        for item, i in list
+          if callback == list[i]
+            list.splice i, 1 #spine.js
+            # list[i] = null #backbone.js
+            break
+    obj
+
+  exports.emit = (obj, eventName, args...) ->
+    both = 2
+    if !(calls = obj._callbacks) then return obj
+    while both--
+      ev = both ? eventName : "all"
+      if list=calls[ev]
+        for item, i in list
+          callback = list[i]
+          args = both ? args : args.unshift(eventName)
+          # maby have obj as the first param?
+          callback.apply obj, args
+  exports.trigger = exports.emit
+  exports.addListener = exports.on
+  exports.unbind = exports.removeListener
+  exports.once = (obj, ev, callback) ->
+    g = (args...) ->
+      _.removeListener ev, g
+      callback.apply obj, args 
+    _.addListener obj, ev, g
+
+    
+
+
+
+
   exports.graceful = (errorFunc, callback) ->
     if _.isArray errorFunc
       extraArgs = _.s errorFunc, 1
@@ -136,11 +262,13 @@ goAndDo = (exports, _) ->
   exports.setAssertCount = (newCount) -> count = newCount
   exports.setPassCount = (newCount) -> passCount = newCount
   exports.setFailCount = (newCount) -> failCount = newCount
+  exports.getFailedMessages = () -> failedMessages
 
     
   exports.assertFail = (actual, expected, message, operator, stackStartFunction) ->
     failCount++
     count++
+    failedMessages.push message
     e = 
       message: message
       actual: actual
@@ -156,7 +284,7 @@ goAndDo = (exports, _) ->
     if !!!value
       _.assertFail value, true, message, '==', exports.assertOk
     else
-      _.assertPass value, true, message, "==", _.assertOk
+      _.assertPass value, true, message, "==", _.assertOk 
   exports.assertEqual = (actual, expected, message) ->
     if `actual != expected`
       _.assertFail actual, expected, message, '==', exports.assertEqual

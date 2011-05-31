@@ -1,5 +1,5 @@
 (function() {
-  var AssertionError, count, drew, failCount, goAndDo, passCount, _;
+  var AssertionError, count, drew, failCount, failedMessages, goAndDo, passCount, _;
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }, __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
     for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
     function ctor() { this.constructor = child; }
@@ -17,6 +17,7 @@
   failCount = 0;
   passCount = 0;
   count = 0;
+  failedMessages = [];
   AssertionError = (function() {
     __extends(AssertionError, Error);
     function AssertionError(options) {
@@ -31,7 +32,154 @@
     };
     return AssertionError;
   })();
+  /*
+  TODO: create a bind thing that uses the same api as backbone.js
+  [cb, allDone] = doneMaker()
+  async1 cb()
+  async2 cb()
+  async3 cb() 
+  
+  allDone () ->
+    alert "all done"
+  
+  #another --
+  # every other time you call it?
+  async4 done()
+  
+  
+  async5 a=done()
+  
+  
+  
+  app.triggerCoolEvent()
+  once app, "cooleventdone", () ->
+  
+  app.triggerCoolEvent()
+  app.once "coolevent", () ->
+    doer something
+  
+   
+  */
   goAndDo = function(exports, _) {
+    exports.asyncEx = function(len, cb) {
+      return _.wait(len, function() {
+        return cb(null, len);
+      });
+    };
+    exports.asyncFail = function(len, cb) {
+      return _.wait(len, function() {
+        return cb(len);
+      });
+    };
+    exports.doneMaker = function() {
+      var allDone, allDoneCallback, done, doneLength, id, length, live, results;
+      allDoneCallback = function() {};
+      results = [];
+      allDone = function(cb) {
+        return allDoneCallback = cb;
+      };
+      id = _.uniqueId();
+      length = 0;
+      doneLength = 0;
+      live = true;
+      done = function() {
+        var myLength;
+        myLength = length;
+        length++;
+        return (function(myLength) {
+          return function(err, result) {
+            if (live === false) {
+              return;
+            }
+            doneLength++;
+            if (err) {
+              allDoneCallback(err, results);
+            }
+            results[myLength] = result;
+            if (doneLength === length) {
+              allDoneCallback(null, results);
+              return live = false;
+            }
+          };
+        })(myLength);
+      };
+      return [done, allDone];
+    };
+    exports.on = function(obj, ev, callback) {
+      var calls, list;
+      calls = obj._callbacks || (obj._callbacks = {});
+      list = calls[ev] || (calls[ev] = {});
+      list.push(callback);
+      obj._events = obj._callbacks;
+      return obj;
+    };
+    exports.removeListener = function(obj, ev, callback) {
+      var calls, i, item, list, _len;
+      if (!ev) {
+        obj._callbacks = {};
+        obj._events = obj._callbacks;
+      } else if (calls = obj._callbacks) {
+        if (!callback) {
+          calls[ev] = [];
+        } else {
+          list = calls[ev];
+          if (!list) {
+            return obj;
+          }
+          for (i = 0, _len = list.length; i < _len; i++) {
+            item = list[i];
+            if (callback === list[i]) {
+              list.splice(i, 1);
+              break;
+            }
+          }
+        }
+      }
+      return obj;
+    };
+    exports.emit = function() {
+      var args, both, callback, calls, ev, eventName, i, item, list, obj, _results;
+      obj = arguments[0], eventName = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
+      both = 2;
+      if (!(calls = obj._callbacks)) {
+        return obj;
+      }
+      _results = [];
+      while (both--) {
+        ev = both != null ? both : {
+          eventName: "all"
+        };
+        _results.push((function() {
+          var _len, _results2;
+          if (list = calls[ev]) {
+            _results2 = [];
+            for (i = 0, _len = list.length; i < _len; i++) {
+              item = list[i];
+              callback = list[i];
+              args = both != null ? both : {
+                args: args.unshift(eventName)
+              };
+              _results2.push(callback.apply(obj, args));
+            }
+            return _results2;
+          }
+        })());
+      }
+      return _results;
+    };
+    exports.trigger = exports.emit;
+    exports.addListener = exports.on;
+    exports.unbind = exports.removeListener;
+    exports.once = function(obj, ev, callback) {
+      var g;
+      g = function() {
+        var args;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        _.removeListener(ev, g);
+        return callback.apply(obj, args);
+      };
+      return _.addListener(obj, ev, g);
+    };
     exports.graceful = function(errorFunc, callback) {
       var extraArgs, makeHandler;
       if (_.isArray(errorFunc)) {
@@ -180,10 +328,14 @@
     exports.setFailCount = function(newCount) {
       return failCount = newCount;
     };
+    exports.getFailedMessages = function() {
+      return failedMessages;
+    };
     exports.assertFail = function(actual, expected, message, operator, stackStartFunction) {
       var e;
       failCount++;
       count++;
+      failedMessages.push(message);
       e = {
         message: message,
         actual: actual,
