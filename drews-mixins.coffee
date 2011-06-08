@@ -97,7 +97,7 @@ goAndDo = (exports, _) ->
 
   exports.on = (obj, ev, callback) ->
     calls = obj._callbacks || obj._callbacks = {}
-    list = calls[ev] || (calls[ev] = {})
+    list = calls[ev] || (calls[ev] = [])
     list.push callback
     obj._events = obj._callbacks
     obj
@@ -117,16 +117,19 @@ goAndDo = (exports, _) ->
             # list[i] = null #backbone.js
             break
     obj
-
+  #TODO async events? wait 0, ->
   exports.emit = (obj, eventName, args...) ->
     both = 2
+    id = _.uniqueId()
     if !(calls = obj._callbacks) then return obj
     while both--
-      ev = both ? eventName : "all"
+      ev = if both then eventName else  "all"
+      list = calls[ev]
+      
       if list=calls[ev]
         for item, i in list
           callback = list[i]
-          args = both ? args : args.unshift(eventName)
+          args = if both then args else args.unshift(eventName)
           # maby have obj as the first param?
           callback.apply obj, args
   exports.trigger = exports.emit
@@ -255,6 +258,29 @@ goAndDo = (exports, _) ->
     if not _.isArray obj[key]
       obj[key] = []
     obj[key].push value
+
+
+  #maybe to one for add to array 
+  addToObject = (obj, key, value) ->
+    obj[key] = value
+  addToObjectMaker = (obj) ->
+    (key, value) ->
+      addToObject obj, key, value
+  exports.addToObjectMaker = addToObjectMaker
+
+  # asyncTests = (batches, tests) ->
+  #   before = addToObjectMaker()
+  #   test = addToObjectMaker()
+  #   prepareTests = () ->
+  #     _.series batches
+  ###    
+  do ->
+    giveBackTheCard = takeACard()
+
+
+
+    giveBackTheCard()
+    ###
 
   exports.getAssertCount = -> count
   exports.getFailCount = -> failCount

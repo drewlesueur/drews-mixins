@@ -11,7 +11,19 @@ _.mixin nimble
   asyncEx
   wait
   isEqual
+  addToObjectMaker
 } = _
+tests = {}
+befores = {}
+test = addToObjectMaker tests
+before = addToObjectMaker befores
+
+stuff = {}
+addToObj = addToObjectMaker stuff
+addToObj "name", "aterciopelados"
+addToObj "cd", "rio"
+eq stuff.name, "aterciopelados", "name should be aterciopelados"
+
 str = "this is a test"
 sub = s str, 2, 2
 eq sub, "is"
