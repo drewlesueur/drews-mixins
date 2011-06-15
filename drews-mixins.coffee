@@ -1,3 +1,4 @@
+#make sure you compile iwth -cw not -cwb
 drew = {}
 #this project used to have async helpers until i found @caolan's
 #nimble project
@@ -23,34 +24,6 @@ class AssertionError extends Error
     [@name + ':', @message].join ' '
 
     # wait for
-###
-TODO: create a bind thing that uses the same api as backbone.js
-[cb, allDone] = doneMaker()
-async1 cb()
-async2 cb()
-async3 cb() 
-
-allDone () ->
-  alert "all done"
-
-#another --
-# every other time you call it?
-async4 done()
-
-
-async5 a=done()
-
-
-
-app.triggerCoolEvent()
-once app, "cooleventdone", () ->
-
-app.triggerCoolEvent()
-app.once "coolevent", () ->
-  doer something
-
- 
-###
 
 
 
@@ -114,11 +87,17 @@ goAndDo = (exports, _) ->
         for item, i in list
           if callback == list[i]
             list.splice i, 1 #spine.js
-            # list[i] = null #backbone.js
+            #list[i] = null #backbone.js
+            # then backbone clearns the nulls later
+            # node.js copies the array when triggering 
+            # so the once isn't a problem
             break
     obj
   #TODO async events? wait 0, ->
   exports.emit = (obj, eventName, args...) ->
+    console.log "you are emmitting #{eventName}"
+    console.log "and your calbacks are"
+    console.log obj._callbacks
     both = 2
     id = _.uniqueId()
     if !(calls = obj._callbacks) then return obj
@@ -127,20 +106,33 @@ goAndDo = (exports, _) ->
       list = calls[ev]
       
       if list=calls[ev]
+        console.log "thie list is "
+        console.log list
+        # then next line coppies the array
+        # so it doesn't get shrinked by a once
+        list = list.slice() #stole this from node.js events
         for item, i in list
+          console.log i
+          console.log list[i]
           callback = list[i]
-          args = if both then args else args.unshift(eventName)
-          # maby have obj as the first param?
-          callback.apply obj, args
+          if not callback
+
+          else
+            args = if both then args else args.unshift(eventName)
+            # maby have obj as the first param?
+            callback.apply obj, args
   exports.trigger = exports.emit
   exports.addListener = exports.on
   exports.unbind = exports.removeListener
   exports.once = (obj, ev, callback) ->
     g = (args...) ->
-      _.removeListener ev, g
+      console.log "here are the old and new callbacks"
+      console.log obj._callbacks
+      _.removeListener obj, ev, g
+      console.log obj._callbacks
       callback.apply obj, args 
     _.addListener obj, ev, g
-
+  
     
 
 
@@ -229,6 +221,9 @@ goAndDo = (exports, _) ->
 
   exports.wait = (miliseconds, func) ->
     setTimeout func, miliseconds
+  times = (numb, func) ->
+    for i in [1..numb]
+      func i
 
   exports.interval = (miliseconds, func) ->
     setInterval func, miliseconds
@@ -259,7 +254,15 @@ goAndDo = (exports, _) ->
       obj[key] = []
     obj[key].push value
 
+  createCommunicator = (url) ->
+    # cross document messaging communicator api
+    loaded = false
+    iframe = document.createElement "iframe"
+    $(iframe).load () ->
+      loaded = true
 
+      
+    
   #maybe to one for add to array 
   addToObject = (obj, key, value) ->
     obj[key] = value
@@ -268,6 +271,25 @@ goAndDo = (exports, _) ->
       addToObject obj, key, value
   exports.addToObjectMaker = addToObjectMaker
 
+  jsonHttpMaker = (method) ->
+    http = (args..., callback) ->
+      [url, args, contentType] = args
+      #TODO: why does the {} work?
+      data = JSON.stringify args || {}
+      $.ajax 
+        url: "#{method}"
+        type: method || "POST"
+        contentType: 'application/json' || contentType
+        data: data
+        dataType: 'json'
+        processData: false
+        success: (data) -> callback null, data
+        error: (data) -> 
+          callback JSON.parse data.responseText
+  exports.jsonPost = jsonHttpMaker "POST"
+  exports.jsonGet = jsonHttpMaker "GET"
+  exports.jsonHttpMaker = jsonHttpMaker
+  # get = ajaxMaker "get"
   # asyncTests = (batches, tests) ->
   #   before = addToObjectMaker()
   #   test = addToObjectMaker()

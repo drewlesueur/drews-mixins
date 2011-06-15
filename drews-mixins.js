@@ -32,36 +32,8 @@
     };
     return AssertionError;
   })();
-  /*
-  TODO: create a bind thing that uses the same api as backbone.js
-  [cb, allDone] = doneMaker()
-  async1 cb()
-  async2 cb()
-  async3 cb() 
-  
-  allDone () ->
-    alert "all done"
-  
-  #another --
-  # every other time you call it?
-  async4 done()
-  
-  
-  async5 a=done()
-  
-  
-  
-  app.triggerCoolEvent()
-  once app, "cooleventdone", () ->
-  
-  app.triggerCoolEvent()
-  app.once "coolevent", () ->
-    doer something
-  
-   
-  */
   goAndDo = function(exports, _) {
-    var addToObject, addToObjectMaker;
+    var addToObject, addToObjectMaker, createCommunicator, jsonHttpMaker, times;
     exports.asyncEx = function(len, cb) {
       return _.wait(len, function() {
         return cb(null, len);
@@ -141,6 +113,9 @@
     exports.emit = function() {
       var args, both, callback, calls, ev, eventName, i, id, item, list, obj, _results;
       obj = arguments[0], eventName = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
+      console.log("you are emmitting " + eventName);
+      console.log("and your calbacks are");
+      console.log(obj._callbacks);
       both = 2;
       id = _.uniqueId();
       if (!(calls = obj._callbacks)) {
@@ -153,12 +128,16 @@
         _results.push((function() {
           var _len, _results2;
           if (list = calls[ev]) {
+            console.log("thie list is ");
+            console.log(list);
+            list = list.slice();
             _results2 = [];
             for (i = 0, _len = list.length; i < _len; i++) {
               item = list[i];
+              console.log(i);
+              console.log(list[i]);
               callback = list[i];
-              args = both ? args : args.unshift(eventName);
-              _results2.push(callback.apply(obj, args));
+              _results2.push(!callback ? void 0 : (args = both ? args : args.unshift(eventName), callback.apply(obj, args)));
             }
             return _results2;
           }
@@ -174,7 +153,10 @@
       g = function() {
         var args;
         args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-        _.removeListener(ev, g);
+        console.log("here are the old and new callbacks");
+        console.log(obj._callbacks);
+        _.removeListener(obj, ev, g);
+        console.log(obj._callbacks);
         return callback.apply(obj, args);
       };
       return _.addListener(obj, ev, g);
@@ -276,6 +258,14 @@
     exports.wait = function(miliseconds, func) {
       return setTimeout(func, miliseconds);
     };
+    times = function(numb, func) {
+      var i, _results;
+      _results = [];
+      for (i = 1; 1 <= numb ? i <= numb : i >= numb; 1 <= numb ? i++ : i--) {
+        _results.push(func(i));
+      }
+      return _results;
+    };
     exports.interval = function(miliseconds, func) {
       return setInterval(func, miliseconds);
     };
@@ -309,6 +299,14 @@
       }
       return obj[key].push(value);
     };
+    createCommunicator = function(url) {
+      var iframe, loaded;
+      loaded = false;
+      iframe = document.createElement("iframe");
+      return $(iframe).load(function() {
+        return loaded = true;
+      });
+    };
     addToObject = function(obj, key, value) {
       return obj[key] = value;
     };
@@ -318,6 +316,32 @@
       };
     };
     exports.addToObjectMaker = addToObjectMaker;
+    jsonHttpMaker = function(method) {
+      var http;
+      return http = function() {
+        var args, callback, contentType, data, url, _i, _ref;
+        args = 2 <= arguments.length ? __slice.call(arguments, 0, _i = arguments.length - 1) : (_i = 0, []), callback = arguments[_i++];
+        _ref = args, url = _ref[0], args = _ref[1], contentType = _ref[2];
+        data = JSON.stringify(args || {});
+        return $.ajax({
+          url: "" + method,
+          type: method || "POST",
+          contentType: 'application/json' || contentType,
+          data: data,
+          dataType: 'json',
+          processData: false,
+          success: function(data) {
+            return callback(null, data);
+          },
+          error: function(data) {
+            return callback(JSON.parse(data.responseText));
+          }
+        });
+      };
+    };
+    exports.jsonPost = jsonHttpMaker("POST");
+    exports.jsonGet = jsonHttpMaker("GET");
+    exports.jsonHttpMaker = jsonHttpMaker;
     /*    
     do ->
       giveBackTheCard = takeACard()
