@@ -113,9 +113,6 @@
     exports.emit = function() {
       var args, both, callback, calls, ev, eventName, i, id, item, list, obj, _results;
       obj = arguments[0], eventName = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
-      console.log("you are emmitting " + eventName);
-      console.log("and your calbacks are");
-      console.log(obj._callbacks);
       both = 2;
       id = _.uniqueId();
       if (!(calls = obj._callbacks)) {
@@ -128,14 +125,10 @@
         _results.push((function() {
           var _len, _results2;
           if (list = calls[ev]) {
-            console.log("thie list is ");
-            console.log(list);
             list = list.slice();
             _results2 = [];
             for (i = 0, _len = list.length; i < _len; i++) {
               item = list[i];
-              console.log(i);
-              console.log(list[i]);
               callback = list[i];
               _results2.push(!callback ? void 0 : (args = both ? args : args.unshift(eventName), callback.apply(obj, args)));
             }
@@ -153,10 +146,7 @@
       g = function() {
         var args;
         args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-        console.log("here are the old and new callbacks");
-        console.log(obj._callbacks);
         _.removeListener(obj, ev, g);
-        console.log(obj._callbacks);
         return callback.apply(obj, args);
       };
       return _.addListener(obj, ev, g);

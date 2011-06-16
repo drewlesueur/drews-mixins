@@ -95,9 +95,6 @@ goAndDo = (exports, _) ->
     obj
   #TODO async events? wait 0, ->
   exports.emit = (obj, eventName, args...) ->
-    console.log "you are emmitting #{eventName}"
-    console.log "and your calbacks are"
-    console.log obj._callbacks
     both = 2
     id = _.uniqueId()
     if !(calls = obj._callbacks) then return obj
@@ -106,14 +103,13 @@ goAndDo = (exports, _) ->
       list = calls[ev]
       
       if list=calls[ev]
-        console.log "thie list is "
-        console.log list
         # then next line coppies the array
         # so it doesn't get shrinked by a once
+        # backbone.js has maybe a more efficient way
+        # where unbind sets it to null, and here it slices them
+        # if they are null
         list = list.slice() #stole this from node.js events
         for item, i in list
-          console.log i
-          console.log list[i]
           callback = list[i]
           if not callback
 
@@ -126,10 +122,7 @@ goAndDo = (exports, _) ->
   exports.unbind = exports.removeListener
   exports.once = (obj, ev, callback) ->
     g = (args...) ->
-      console.log "here are the old and new callbacks"
-      console.log obj._callbacks
       _.removeListener obj, ev, g
-      console.log obj._callbacks
       callback.apply obj, args 
     _.addListener obj, ev, g
   
