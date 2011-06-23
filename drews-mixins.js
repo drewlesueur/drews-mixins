@@ -33,7 +33,7 @@
     return AssertionError;
   })();
   goAndDo = function(exports, _) {
-    var addToObject, addToObjectMaker, createCommunicator, jsonHttpMaker, times;
+    var addToObject, addToObjectMaker, jsonHttpMaker, log, postMessageHelper, setLocation, times, trigger;
     exports.asyncEx = function(len, cb) {
       return _.wait(len, function() {
         return cb(null, len);
@@ -110,7 +110,7 @@
       }
       return obj;
     };
-    exports.emit = function() {
+    trigger = function() {
       var args, both, callback, calls, ev, eventName, i, id, item, list, obj, _results;
       obj = arguments[0], eventName = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
       both = 2;
@@ -138,7 +138,8 @@
       }
       return _results;
     };
-    exports.trigger = exports.emit;
+    exports.trigger = trigger;
+    exports.emit = exports.trigger;
     exports.addListener = exports.on;
     exports.unbind = exports.removeListener;
     exports.once = function(obj, ev, callback) {
@@ -289,13 +290,69 @@
       }
       return obj[key].push(value);
     };
-    createCommunicator = function(url) {
-      var iframe, loaded;
-      loaded = false;
-      iframe = document.createElement("iframe");
-      return $(iframe).load(function() {
-        return loaded = true;
+    setLocation = function(stuff, cb) {};
+    log = function() {
+      var args;
+      args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      return console.log.apply(console, args);
+    };
+    exports.log = log;
+    postMessageHelper = function(yourWin, methods) {
+      var bind, callbacks, self;
+      if (methods == null) {
+        methods = {};
+      }
+      self = {};
+      self.addMethods = function(fns) {
+        return _.extend(methods, fns);
+      };
+      callbacks = {};
+      bind = function(event) {};
+      self.call = function() {
+        var callback, id, method, params, request, requestString, _i;
+        method = arguments[0], params = 3 <= arguments.length ? __slice.call(arguments, 1, _i = arguments.length - 1) : (_i = 1, []), callback = arguments[_i++];
+        id = _.uuid();
+        request = {
+          method: method,
+          params: params,
+          id: id
+        };
+        requestString = JSON.stringify(request);
+        callbacks[id] = callback;
+        return yourWin.postMessage(requestString, "*");
+      };
+      $(window).bind("message", function(e) {
+        var error, id, message, method, params, result;
+        e = e.originalEvent;
+        message = JSON.parse(e.data);
+        if ("result" in message) {
+          id = message.id, error = message.error, result = message.result;
+          return typeof callbacks[id] === "function" ? callbacks[id](error, result) : void 0;
+        } else if ("method" in message) {
+          method = message.method, params = message.params, id = message.id;
+          return typeof methods[method] === "function" ? methods[method].apply(methods, __slice.call(params).concat([function(err, result) {
+            var response, responseString;
+            if (err == null) {
+              err = null;
+            }
+            if (result == null) {
+              result = null;
+            }
+            response = {
+              error: err,
+              result: result,
+              id: id
+            };
+            responseString = JSON.stringify(response);
+            return yourWin.postMessage(responseString, "*");
+          }])) : void 0;
+        }
       });
+      return self;
+    };
+    exports.postMessageHelper = postMessageHelper;
+    exports.uuid = function() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {var r = Math.random()*16|0,v=c=='x'?r:r&0x3|0x8;return v.toString(16);});;
     };
     addToObject = function(obj, key, value) {
       return obj[key] = value;
@@ -314,7 +371,7 @@
         _ref = args, url = _ref[0], args = _ref[1], contentType = _ref[2];
         data = JSON.stringify(args || {});
         return $.ajax({
-          url: "" + method,
+          url: "" + url,
           type: method || "POST",
           contentType: 'application/json' || contentType,
           data: data,
@@ -332,6 +389,14 @@
     exports.jsonPost = jsonHttpMaker("POST");
     exports.jsonGet = jsonHttpMaker("GET");
     exports.jsonHttpMaker = jsonHttpMaker;
+    exports.eachArray = function(arr, func) {
+      var k, v, _len;
+      for (k = 0, _len = arr.length; k < _len; k++) {
+        v = arr[k];
+        func(v, k);
+      }
+      return arr;
+    };
     /*    
     do ->
       giveBackTheCard = takeACard()

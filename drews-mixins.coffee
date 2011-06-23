@@ -94,7 +94,7 @@ goAndDo = (exports, _) ->
             break
     obj
   #TODO async events? wait 0, ->
-  exports.emit = (obj, eventName, args...) ->
+  trigger = (obj, eventName, args...) ->
     both = 2
     id = _.uniqueId()
     if !(calls = obj._callbacks) then return obj
@@ -117,7 +117,9 @@ goAndDo = (exports, _) ->
             args = if both then args else args.unshift(eventName)
             # maby have obj as the first param?
             callback.apply obj, args
-  exports.trigger = exports.emit
+  exports.trigger = trigger
+  exports.emit = exports.trigger
+  
   exports.addListener = exports.on
   exports.unbind = exports.removeListener
   exports.once = (obj, ev, callback) ->
@@ -247,14 +249,67 @@ goAndDo = (exports, _) ->
       obj[key] = []
     obj[key].push value
 
-  createCommunicator = (url) ->
-    # cross document messaging communicator api
-    loaded = false
-    iframe = document.createElement "iframe"
-    $(iframe).load () ->
-      loaded = true
+  setLocation = (stuff, cb) ->
+  log = (args...) -> console.log args... 
+  exports.log = log
+
+  postMessageHelper = (yourWin, methods={}) ->
+    self = {}
+    self.addMethods = (fns) ->
+      _.extend methods, fns 
+
+    callbacks = {} 
+    #origin = yourWin.location.origin # cant do
+    #origin = _origin # or something
+
+    bind = (event) ->
+    self.call = (method, params..., callback) ->    
+      id = _.uuid()
+      request =
+        method: method
+        params: params
+        id: id
+      requestString = JSON.stringify request
+      callbacks[id] = callback
+      yourWin.postMessage requestString, "*" #origin  
+    $(window).bind "message", (e) ->
+      e = e.originalEvent #only needed for jQuery
+      #if e.origin != origin 
+      #  return
+      message = JSON.parse e.data
+      if "result" of message
+        # i called another window & they're responding
+        {id, error, result} = message
+        callbacks[id]? error, result
+      else if "method" of message
+        # another window is calling me
+        {method, params, id} = message
+        # by defualt makeing it async
+        methods[method]? params..., (err=null, result=null) ->
+          response =
+            error: err
+            result: result
+            id: id
+          responseString = JSON.stringify response
+          #e.source.postMessage
+          yourWin.postMessage responseString, "*" #origin
+    self
+
+
+
+
+          
 
       
+    # win is an iframe.contentWindow or other window
+      
+  exports.postMessageHelper = postMessageHelper
+
+
+
+  exports.uuid = () ->
+    #http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript
+    `'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {var r = Math.random()*16|0,v=c=='x'?r:r&0x3|0x8;return v.toString(16);});` 
     
   #maybe to one for add to array 
   addToObject = (obj, key, value) ->
@@ -270,7 +325,7 @@ goAndDo = (exports, _) ->
       #TODO: why does the {} work?
       data = JSON.stringify args || {}
       $.ajax 
-        url: "#{method}"
+        url: "#{url}"
         type: method || "POST"
         contentType: 'application/json' || contentType
         data: data
@@ -282,6 +337,10 @@ goAndDo = (exports, _) ->
   exports.jsonPost = jsonHttpMaker "POST"
   exports.jsonGet = jsonHttpMaker "GET"
   exports.jsonHttpMaker = jsonHttpMaker
+  exports.eachArray = (arr, func) ->
+    for v,k in arr
+      func v, k
+    arr
   # get = ajaxMaker "get"
   # asyncTests = (batches, tests) ->
   #   before = addToObjectMaker()
