@@ -2,15 +2,16 @@
   "name": "drews-mixins",
   "keywords": ["underscore", "mixins", "mixin", "drew", "async", "asynchronous", "util"],
   "description": "A couple underscore.js mixins",
-  "version": "0.3.2",
-  "homepage": "http://drews-mixins.the.tl/test/test.html",
+  "version": "0.4.0",
+  "homepage": "http://drews-mixins.the.tl/",
   "repository": {
     "type": "git",
     "url": "git://github.com/drewlesueur/drews-mixins.git"
   },
   "author": "Drew LeSueur <drewalex@gmail.com> (http://twitter.com/drewlesueur)",
   "dependencies": {
-    "underscore": ">=1.0.0"
+    "underscore": ">=1.0.0",
+    "nimble": ">=0.0.2"
   },
   "main": "drews-mixins.js",
   "engines": {

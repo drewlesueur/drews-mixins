@@ -1,9 +1,17 @@
 <!doctype html>
 <html>
   <head>
+    <script src="http://inc.the.tl/module/module.js"> </script>
+    <script src="http://inc.the.tl/underscore.js"> </script>
+    <script src="http://inc.the.tl/jquery.js"> </script>
+    <script src="http://inc.the.tl/nimble.js"> </script>
+    <script src="drews-mixins.js"> </script>
     <script>
-      location.href = "/test/test.html"
+      define("underscore", function(){return _})
+      define("jquery", function(){return $})
+      define("nimble", function(){return _})
     </script>
+    <script src="test2.js"> </script>
 
   </head>
   <body>

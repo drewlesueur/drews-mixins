@@ -1,5 +1,5 @@
 (function() {
-  var AssertionError, count, drew, failCount, failedMessages, goAndDo, passCount, _;
+  var AssertionError, count, failCount, failedMessages, passCount;
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }, __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
     for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
     function ctor() { this.constructor = child; }
@@ -13,7 +13,6 @@
     }
     return -1;
   };
-  drew = {};
   failCount = 0;
   passCount = 0;
   count = 0;
@@ -32,8 +31,10 @@
     };
     return AssertionError;
   })();
-  goAndDo = function(exports, _) {
-    var addToObject, addToObjectMaker, jsonHttpMaker, log, postMessageHelper, setLocation, times, trigger;
+  define("drews-mixins", function() {
+    var addToObject, addToObjectMaker, exports, hosty, jsonHttpMaker, log, postMessageHelper, setLocation, times, trigger, _;
+    _ = require("underscore");
+    exports = {};
     exports.asyncEx = function(len, cb) {
       return _.wait(len, function() {
         return cb(null, len);
@@ -297,17 +298,40 @@
       return console.log.apply(console, args);
     };
     exports.log = log;
-    postMessageHelper = function(yourWin, methods) {
-      var bind, callbacks, self;
+    hosty = null;
+    postMessageHelper = function(yourWin, origin, methods) {
+      var callbacks, events, host, self;
       if (methods == null) {
         methods = {};
       }
       self = {};
+      host = {};
       self.addMethods = function(fns) {
         return _.extend(methods, fns);
       };
+      self.addMethods({
+        bind: function(event, callback) {}
+      });
+      events = {};
       callbacks = {};
-      bind = function(event) {};
+      self.trigger = function() {};
+      self.write = function() {};
+      self.trigger = function() {
+        var event, params;
+        event = arguments[0], params = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+      };
+      self.bind = function(event, callback) {
+        var id, subscribe, subscribeString;
+        id = _.uuid();
+        subscribe = {
+          channel: event,
+          id: id
+        };
+        subscribeString = JSON.stringify(subscribe);
+        events[event] || (events[event] = []);
+        events[event].push(callback);
+        return yourWin.postMessage(subscribeString, origin);
+      };
       self.call = function() {
         var callback, id, method, params, request, requestString, _i;
         method = arguments[0], params = 3 <= arguments.length ? __slice.call(arguments, 1, _i = arguments.length - 1) : (_i = 1, []), callback = arguments[_i++];
@@ -319,11 +343,14 @@
         };
         requestString = JSON.stringify(request);
         callbacks[id] = callback;
-        return yourWin.postMessage(requestString, "*");
+        return yourWin.postMessage(requestString, origin);
       };
       $(window).bind("message", function(e) {
         var error, id, message, method, params, result;
         e = e.originalEvent;
+        if (e.origin !== origin && origin !== "*") {
+          return;
+        }
         message = JSON.parse(e.data);
         if ("result" in message) {
           id = message.id, error = message.error, result = message.result;
@@ -344,7 +371,7 @@
               id: id
             };
             responseString = JSON.stringify(response);
-            return yourWin.postMessage(responseString, "*");
+            return yourWin.postMessage(responseString, origin);
           }])) : void 0;
         }
       });
@@ -389,22 +416,11 @@
     exports.jsonPost = jsonHttpMaker("POST");
     exports.jsonGet = jsonHttpMaker("GET");
     exports.jsonHttpMaker = jsonHttpMaker;
-    exports.eachArray = function(arr, func) {
-      var k, v, _len;
-      for (k = 0, _len = arr.length; k < _len; k++) {
-        v = arr[k];
-        func(v, k);
-      }
-      return arr;
-    };
     /*    
     do ->
       giveBackTheCard = takeACard()
-    
-    
-    
       giveBackTheCard()
-      */
+    */
     exports.getAssertCount = function() {
       return count;
     };
@@ -458,22 +474,14 @@
         return _.assertPass(actual, expected, message, "==", exports.assertEqual);
       }
     };
-    return exports.assertNotEqual = function(actual, expected, message) {
+    exports.assertNotEqual = function(actual, expected, message) {
       if (actual == expected) {
         return _.assertFail(actual, expected, message, '!=', exports.assertNotEqual);
       } else {
         return _.assertPass(actual, expected, message, '!=', exports.assertNotEqual);
       }
     };
-  };
-  if (typeof exports === 'undefined') {
-    _ = this._ || {};
-    goAndDo(drew, _);
-    _.mixin(drew);
-  } else {
-    module.exports = function(_) {
-      goAndDo(drew, _);
-      return _.mixin(drew);
-    };
-  }
+    _.mixin(exports);
+    return exports;
+  });
 }).call(this);

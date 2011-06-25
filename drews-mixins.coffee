@@ -1,10 +1,6 @@
 #make sure you compile iwth -cw not -cwb
-drew = {}
 #this project used to have async helpers until i found @caolan's
 #nimble project
-
-
-
 
 failCount = 0
 passCount = 0
@@ -24,12 +20,9 @@ class AssertionError extends Error
     [@name + ':', @message].join ' '
 
     # wait for
-
-
-
-
-
-goAndDo = (exports, _) ->  
+define "drews-mixins", ->
+  _ = require "underscore";
+  exports = {}
   exports.asyncEx = (len, cb) ->
     _.wait len, -> cb null, len 
 
@@ -128,11 +121,6 @@ goAndDo = (exports, _) ->
       callback.apply obj, args 
     _.addListener obj, ev, g
   
-    
-
-
-
-
   exports.graceful = (errorFunc, callback) ->
     if _.isArray errorFunc
       extraArgs = _.s errorFunc, 1
@@ -253,16 +241,44 @@ goAndDo = (exports, _) ->
   log = (args...) -> console.log args... 
   exports.log = log
 
-  postMessageHelper = (yourWin, methods={}) ->
+  hosty = null 
+      
+    
+  postMessageHelper = (yourWin, origin, methods={}) ->
     self = {}
+    host = {}
+    # methods that can be called on me
     self.addMethods = (fns) ->
       _.extend methods, fns 
-
+    self.addMethods
+      bind: (event, callback) ->
+      #?????
+    events = {}
     callbacks = {} 
     #origin = yourWin.location.origin # cant do
     #origin = _origin # or something
 
-    bind = (event) ->
+    #???
+    #???    
+    self.trigger = ->
+    self.write = -> #sream data
+    # then need a self.ondata self.onend callbacks
+    # trigger self, "data"
+    # trigger self, "end"
+    #  or something else
+    self.trigger = (event, params...) ->
+
+    # self.bind not done yet    
+    self.bind = (event, callback) ->
+      id = _.uuid() 
+      subscribe = 
+        channel: event
+        id: id
+      subscribeString = JSON.stringify subscribe
+      events[event] ||= []
+      events[event].push callback
+      yourWin.postMessage subscribeString, origin
+      
     self.call = (method, params..., callback) ->    
       id = _.uuid()
       request =
@@ -271,11 +287,11 @@ goAndDo = (exports, _) ->
         id: id
       requestString = JSON.stringify request
       callbacks[id] = callback
-      yourWin.postMessage requestString, "*" #origin  
+      yourWin.postMessage requestString, origin  
     $(window).bind "message", (e) ->
       e = e.originalEvent #only needed for jQuery
-      #if e.origin != origin 
-      #  return
+      if e.origin != origin and origin != "*" 
+        return
       message = JSON.parse e.data
       if "result" of message
         # i called another window & they're responding
@@ -292,21 +308,12 @@ goAndDo = (exports, _) ->
             id: id
           responseString = JSON.stringify response
           #e.source.postMessage
-          yourWin.postMessage responseString, "*" #origin
+          yourWin.postMessage responseString, origin
     self
-
-
-
-
-          
-
       
     # win is an iframe.contentWindow or other window
       
   exports.postMessageHelper = postMessageHelper
-
-
-
   exports.uuid = () ->
     #http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript
     `'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {var r = Math.random()*16|0,v=c=='x'?r:r&0x3|0x8;return v.toString(16);});` 
@@ -337,10 +344,6 @@ goAndDo = (exports, _) ->
   exports.jsonPost = jsonHttpMaker "POST"
   exports.jsonGet = jsonHttpMaker "GET"
   exports.jsonHttpMaker = jsonHttpMaker
-  exports.eachArray = (arr, func) ->
-    for v,k in arr
-      func v, k
-    arr
   # get = ajaxMaker "get"
   # asyncTests = (batches, tests) ->
   #   before = addToObjectMaker()
@@ -350,11 +353,8 @@ goAndDo = (exports, _) ->
   ###    
   do ->
     giveBackTheCard = takeACard()
-
-
-
     giveBackTheCard()
-    ###
+  ###
 
   exports.getAssertCount = -> count
   exports.getFailCount = -> failCount
@@ -397,13 +397,6 @@ goAndDo = (exports, _) ->
       _.assertPass actual, expected, message, '!=', exports.assertNotEqual
 
 
-if typeof exports  == 'undefined'
-  _ = this._ || {}
-  goAndDo drew, _
-  _.mixin drew
-else
-  module.exports = (_) ->
-    goAndDo drew, _
-    _.mixin drew
-
+  _.mixin exports
+  return exports
 #root._ if root._ is defined in parent script 
