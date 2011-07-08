@@ -1,19 +1,27 @@
 <!doctype html>
 <html>
-  <head>
-    <script src="http://inc.the.tl/module/module.js"> </script>
-    <script src="http://inc.the.tl/underscore.js"> </script>
-    <script src="http://inc.the.tl/jquery.js"> </script>
-    <script src="http://inc.the.tl/nimble.js"> </script>
-    <script src="drews-mixins.js"> </script>
-    <script>
-      define("underscore", function(){return _})
-      define("jquery", function(){return $})
-      define("nimble", function(){return _})
-    </script>
-    <script src="test2.js"> </script>
-
-  </head>
-  <body>
-  </body>
+<head>
+  <title></title>
+  <link rel="stylesheet/less" type="text/css" href="styles.css"> 
+  <script src="http://inc.the.tl/module.js"></script>
+  <script src="http://inc.the.tl/jquery-1.6.min.js"></script>
+  <script src="http://inc.the.tl/json2.js"></script>
+  <script src="http://inc.the.tl/underscore.js"></script>
+  <script src="http://inc.the.tl/nimble.js"></script>
+  <script src="http://inc.the.tl/drews-mixins.js"></script>
+  <script>
+    // for javascripts that done use the define, require pattern
+    define("jquery", function(){return jQuery;});
+    define("underscore", function(){return _;});
+    define("json", function(){return JSON;});
+    define("nimble", function(){return _;});
+  </script>
+  <script src="test2.js"> </script>
+  <script>
+  </script>
+</head>
+<body>
+</body>
 </html>
+
+

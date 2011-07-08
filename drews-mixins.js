@@ -32,7 +32,7 @@
     return AssertionError;
   })();
   define("drews-mixins", function() {
-    var addToObject, addToObjectMaker, exports, hosty, jsonHttpMaker, log, postMessageHelper, setLocation, times, trigger, _;
+    var addToObject, addToObjectMaker, errorHandleMaker, exports, hosty, jsonGet, jsonHttpMaker, jsonPost, jsonRpcMaker, log, meta, metaMaker, metaObjects, polymorphic, postMessageHelper, set, setLocation, times, trigger, _;
     _ = require("underscore");
     exports = {};
     exports.asyncEx = function(len, cb) {
@@ -44,6 +44,34 @@
       return _.wait(len, function() {
         return cb(len);
       });
+    };
+    exports.doneMaker2 = function() {
+      var allDone, allDoneCallback, done, doneLength, hold, id, length, live;
+      allDoneCallback = function() {};
+      allDone = function(cb) {
+        return allDoneCallback = cb;
+      };
+      id = _.uniqueId();
+      length = 0;
+      doneLength = 0;
+      live = true;
+      done = function(err) {
+        if (live === false) {
+          return;
+        }
+        doneLength++;
+        if (err) {
+          allDoneCallback(err);
+        }
+        if (doneLength === length) {
+          allDoneCallback(null);
+          return live = false;
+        }
+      };
+      hold = function() {
+        return length++;
+      };
+      return [hold, done, allDone];
     };
     exports.doneMaker = function() {
       var allDone, allDoneCallback, done, doneLength, id, length, live, results;
@@ -262,7 +290,7 @@
       return setInterval(func, miliseconds);
     };
     exports.compareArrays = function(left, right) {
-      var inBoth, inLeftNotRight, inRightNotLeft, item, _i, _j, _len, _len2;
+      var dupLeft, dupRight, inBoth, inLeftNotRight, inRightNotLeft, item, key, _i, _j, _len, _len2, _len3, _len4;
       inLeftNotRight = [];
       inRightNotLeft = [];
       inBoth = [];
@@ -280,7 +308,23 @@
           inRightNotLeft.push(item);
         }
       }
-      return [inLeftNotRight, inRightNotLeft, inBoth];
+      dupLeft = [];
+      dupRight = [];
+      for (key = 0, _len3 = left.length; key < _len3; key++) {
+        item = left[key];
+        if ((__indexOf.call(_.s(left, 0, key - 1), item) >= 0) || (__indexOf.call(_.s(left, key + 1), item) >= 0)) {
+          dupLeft[item] = "";
+        }
+      }
+      for (key = 0, _len4 = right.length; key < _len4; key++) {
+        item = right[key];
+        if ((__indexOf.call(_.s(right, 0, key - 1), item) >= 0) || (__indexOf.call(_.s(right, key + 1), item) >= 0)) {
+          dupRight[item] = "";
+        }
+      }
+      dupLeft = _.keys(dupLeft);
+      dupRight = _.keys(dupRight);
+      return [inLeftNotRight, inRightNotLeft, inBoth, dupLeft, dupRight];
     };
     exports.pacManMapMaker = function(left, right, top, bottom) {
       return 1;
@@ -381,6 +425,32 @@
     exports.uuid = function() {
       return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {var r = Math.random()*16|0,v=c=='x'?r:r&0x3|0x8;return v.toString(16);});;
     };
+    errorHandleMaker = function(fns, handler) {
+      var fn, ret, wasArray;
+      ret = [];
+      wasArray = true;
+      if (!_.isArray(fns)) {
+        fn = [fns];
+        wasArray = false;
+      }
+      _.each(fns, function(fn) {
+        return ret.push(function() {
+          var args, cb, _i;
+          args = 2 <= arguments.length ? __slice.call(arguments, 0, _i = arguments.length - 1) : (_i = 0, []), cb = arguments[_i++];
+          return fn.apply(null, __slice.call(args).concat([function(err, result) {
+            if (err) {
+              handler(err, result);
+            }
+            return cb(err, result);
+          }]));
+        });
+      });
+      if (wasArray) {
+        return ret;
+      } else {
+        return ret[0];
+      }
+    };
     addToObject = function(obj, key, value) {
       return obj[key] = value;
     };
@@ -413,9 +483,165 @@
         });
       };
     };
-    exports.jsonPost = jsonHttpMaker("POST");
-    exports.jsonGet = jsonHttpMaker("GET");
-    exports.jsonHttpMaker = jsonHttpMaker;
+    jsonPost = jsonHttpMaker("POST");
+    jsonGet = jsonHttpMaker("GET");
+    jsonHttpMaker = jsonHttpMaker;
+    /*
+      # example node.js method for handling this rpc
+      pg "/rpc", (req, res) ->
+        body = req.body
+        {method, params, id} = body
+        log method, params, id
+        log rpcMethods[method]
+        rpcMethods[method] params..., (err, result) ->
+          res.send
+            result: result
+            error: err
+            id: id
+      */
+    jsonRpcMaker = function(url) {
+      return function() {
+        var args, callback, method, _i;
+        method = arguments[0], args = 3 <= arguments.length ? __slice.call(arguments, 1, _i = arguments.length - 1) : (_i = 1, []), callback = arguments[_i++];
+        return jsonPost(url, {
+          method: method,
+          params: args,
+          id: _.uuid()
+        }, function(err, data) {
+          var error, id, result;
+          result = data.result, error = data.error, id = data.id;
+          return callback(error || err, result);
+        });
+      };
+    };
+    metaObjects = {};
+    meta = function(obj, defaulto) {
+      var __mid;
+      if (defaulto == null) {
+        defaulto = {};
+      }
+      if (!(typeof obj === "object")) {
+        return;
+      }
+      if ("__mid" in obj) {
+        return metaObjects[obj.__mid];
+      } else {
+        __mid = _.uniqueId();
+        obj.__mid = __mid;
+        return metaObjects[__mid] = defaulto;
+      }
+    };
+    set = function(obj, values) {
+      _.each(values, function(value, key) {
+        var changed, oldVal, oldVals;
+        changed = {};
+        oldVals = {};
+        if (obj[key] !== value) {
+          oldVal = obj[key];
+          oldVals[key] = oldVal;
+          obj[key] = value;
+          changed[key] = value;
+          return trigger(obj, "change:" + key, key, newVal, oldVal);
+        }
+      });
+      if (changed.length > 0) {
+        return trigger(obj, "change", changed, oldVals);
+      }
+    };
+    metaMaker = function(val) {
+      return function(obj, defaulto) {
+        if (defaulto == null) {
+          defaulto = {};
+        }
+        return (meta(obj))[val] || ((meta(obj))[val] = defaulto);
+      };
+    };
+    polymorphic = function() {
+      var args, member, obj, withMember;
+      args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      withMember = function(member, obj, chained) {
+        var loopBack, ret, type, _ref;
+        if (chained == null) {
+          chained = false;
+        }
+        log("member: " + member);
+        log("object");
+        log(obj);
+        if (_.isFunction(member)) {
+          ret = function() {
+            var args;
+            args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+            return member.apply(null, [obj].concat(__slice.call(args)));
+          };
+        } else if ((typeof obj === "object") && member in obj) {
+          log("" + member + " is of ");
+          log(obj);
+          ret = obj[member];
+        } else if ((typeof obj === "object") && "member_missing" in obj) {
+          log("member_mission is of");
+          log(obj);
+          ret = obj.member_missing(obj, member);
+        } else {
+          type = obj._type || ((_ref = meta(obj)) != null ? _ref.type : void 0);
+          if (type) {
+            log("test for type");
+            ret = polymorphic(type, member);
+          } else if (member in _) {
+            ret = function() {
+              var args, _ref2;
+              args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+              return (_ref2 = _(obj))[member].apply(_ref2, args);
+            };
+            log("" + member + " is of _");
+          } else {
+            log("" + member + " is not of _");
+            ret = void 0;
+          }
+        }
+        if (chained) {
+          loopBack = function(member) {
+            log("looping back with " + member);
+            log("ret is");
+            log(ret);
+            if (!member) {
+              return ret;
+            } else {
+              return withMember(member, ret, true);
+            }
+          };
+          if (_.isFunction(ret)) {
+            return function() {
+              var args;
+              args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+              ret = ret.apply(null, args);
+              return loopBack;
+            };
+          } else {
+            return loopBack;
+          }
+        } else {
+          return ret;
+        }
+      };
+      obj = args[0], member = args[1];
+      if (args.length === 1) {
+        return function(member) {
+          return withMember(member, obj, true);
+        };
+      } else {
+        return withMember(member, obj, false);
+      }
+    };
+    _.extend(exports, {
+      jsonPost: jsonPost,
+      jsonGet: jsonGet,
+      jsonHttpMaker: jsonHttpMaker,
+      jsonRpcMaker: jsonRpcMaker,
+      meta: meta,
+      set: set,
+      metaMaker: metaMaker,
+      polymorphic: polymorphic
+    });
     /*    
     do ->
       giveBackTheCard = takeACard()
@@ -454,6 +680,7 @@
         operator: operator,
         stackStartFunction: stackStartFunction
       };
+      console.log("ERROR!!");
       return console.log(e);
     };
     exports.assertPass = function(actual, expected, message, operator, stackStartFunction) {
@@ -480,6 +707,14 @@
       } else {
         return _.assertPass(actual, expected, message, '!=', exports.assertNotEqual);
       }
+    };
+    exports.eachArray = function(arr, fn) {
+      var k, v, _len;
+      for (k = 0, _len = arr.length; k < _len; k++) {
+        v = arr[k];
+        fn(v, k);
+      }
+      return arr;
     };
     _.mixin(exports);
     return exports;

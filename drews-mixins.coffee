@@ -29,6 +29,26 @@ define "drews-mixins", ->
   exports.asyncFail = (len, cb) ->
     _.wait len, -> cb len
     
+  exports.doneMaker2 = () ->
+    allDoneCallback = ->
+    allDone = (cb) ->
+      allDoneCallback = cb
+    id = _.uniqueId()
+    length = 0
+    doneLength = 0
+    live = true
+    done = (err) ->
+      if live is false then return
+      doneLength++
+      if err then allDoneCallback err
+      if doneLength is length
+        allDoneCallback null
+        live = false
+    hold = -> length++ 
+    [hold, done, allDone]
+
+      
+
   exports.doneMaker = () ->
     allDoneCallback = ->
     results = []
@@ -226,7 +246,20 @@ define "drews-mixins", ->
       if item not in left
         inRightNotLeft.push item 
 
-    return [inLeftNotRight, inRightNotLeft, inBoth]
+    dupLeft = []
+    dupRight = []
+    for item, key in left
+      if (item in _.s left, 0, key - 1) or (item in _.s left, key+1)
+        dupLeft[item] = ""
+    for item, key in right
+      if (item in _.s right, 0, key - 1) or (item in _.s right, key+1)
+        dupRight[item] = ""
+
+    dupLeft = _.keys dupLeft
+    dupRight = _.keys dupRight
+
+
+    return [inLeftNotRight, inRightNotLeft, inBoth, dupLeft, dupRight]
 
   exports.pacManMapMaker = (left, right, top, bottom) ->
     1
@@ -318,6 +351,29 @@ define "drews-mixins", ->
     #http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript
     `'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {var r = Math.random()*16|0,v=c=='x'?r:r&0x3|0x8;return v.toString(16);});` 
     
+  # global error handler maker
+  # pass it an array of fns and get 
+  # their async error gets hendled by the handler
+  # work in progress
+  errorHandleMaker = (fns, handler) ->
+    ret = []
+    wasArray = true
+    if not _.isArray(fns)
+      fn = [fns]
+      wasArray = false
+    _.each fns, (fn) ->
+      ret.push (args..., cb) ->
+        fn args..., (err, result) ->
+          if err
+            handler err, result
+          cb err, result
+     if wasArray
+       ret
+     else
+       ret[0]
+          
+
+
   #maybe to one for add to array 
   addToObject = (obj, key, value) ->
     obj[key] = value
@@ -329,7 +385,7 @@ define "drews-mixins", ->
   jsonHttpMaker = (method) ->
     http = (args..., callback) ->
       [url, args, contentType] = args
-      #TODO: why does the {} work?
+      #TODOO: why does the {} work?
       data = JSON.stringify args || {}
       $.ajax 
         url: "#{url}"
@@ -341,9 +397,128 @@ define "drews-mixins", ->
         success: (data) -> callback null, data
         error: (data) -> 
           callback JSON.parse data.responseText
-  exports.jsonPost = jsonHttpMaker "POST"
-  exports.jsonGet = jsonHttpMaker "GET"
-  exports.jsonHttpMaker = jsonHttpMaker
+  jsonPost = jsonHttpMaker "POST"
+  jsonGet = jsonHttpMaker "GET"
+  jsonHttpMaker = jsonHttpMaker
+
+  ###
+  # example node.js method for handling this rpc
+  pg "/rpc", (req, res) ->
+    body = req.body
+    {method, params, id} = body
+    log method, params, id
+    log rpcMethods[method]
+    rpcMethods[method] params..., (err, result) ->
+      res.send
+        result: result
+        error: err
+        id: id
+  ###
+
+  jsonRpcMaker = (url) ->
+    (method, args..., callback) ->
+      jsonPost url,
+        method: method,
+        params: args
+        id : _.uuid() 
+      , (err, data) ->
+        {result, error, id} = data 
+        callback (error or err), result
+
+  metaObjects = {}
+  meta = (obj, defaulto={}) ->
+    if not (typeof obj == "object")
+      return undefined
+    if "__mid" of obj
+      return metaObjects[obj.__mid]
+    else
+      __mid = _.uniqueId()
+      obj.__mid = __mid
+      metaObjects[__mid] = defaulto
+  set = (obj, values) ->
+    _.each values, (value, key) ->
+      changed = {}
+      oldVals = {}
+      if obj[key] != value
+        oldVal = obj[key]
+        oldVals[key] = oldVal
+        obj[key] = value
+        changed[key] = value
+        trigger obj, "change:#{key}", key, newVal, oldVal 
+    if changed.length > 0
+      trigger obj, "change", changed, oldVals
+  metaMaker = (val) -> 
+    (obj, defaulto={}) -> (meta obj)[val] || (meta obj)[val] = defaulto
+   
+  # one ting is member_missing
+  # another thing is aop beforecall after call
+  # this is just a member missing deal 
+  polymorphic = (args...) ->
+    withMember = (member, obj, chained=false) -> 
+      log "member: #{member}"
+      log "object"
+      log obj
+      if _.isFunction(member)
+        ret = (args...) ->
+          member obj, args...
+      else if (typeof obj == "object") and member of obj
+        log "#{member} is of "
+        log obj
+        ret = obj[member]
+      else if (typeof obj == "object") and "member_missing" of obj
+        log "member_mission is of"
+        log obj
+        ret = obj.member_missing obj, member
+      else
+        type = obj._type || (meta obj)?.type
+        if type
+          log "test for type"
+          ret = (polymorphic type, member)
+        else if member of _ # is this last one going to far?
+            ret = (args...) ->
+              _(obj)[member] args...
+            log "#{member} is of _"
+        else
+          log "#{member} is not of _"
+          ret = undefined
+      if chained
+        loopBack = (member) ->
+          log "looping back with #{member}"
+          log "ret is"
+          log ret
+          if not member
+            return ret
+          else 
+            return withMember member, ret, true
+        if _.isFunction(ret)
+          (args...) ->
+            ret = ret args...
+            loopBack
+         else
+           loopBack
+      else
+        return ret
+    [obj, member] = args
+    if args.length == 1
+      (member) ->
+        withMember member, obj, true
+    else
+      withMember member, obj, false
+    #(p listing, "save")
+    #(p listing)("map")((x) -> x + 1)("select")((x) -> x == 1)()
+     
+
+
+
+
+  _.extend exports, {jsonPost, jsonGet, jsonHttpMaker,
+    jsonRpcMaker, meta, set, metaMaker, polymorphic}
+
+
+      
+       
+      
+  
   # get = ajaxMaker "get"
   # asyncTests = (batches, tests) ->
   #   before = addToObjectMaker()
@@ -363,7 +538,6 @@ define "drews-mixins", ->
   exports.setPassCount = (newCount) -> passCount = newCount
   exports.setFailCount = (newCount) -> failCount = newCount
   exports.getFailedMessages = () -> failedMessages
-
     
   exports.assertFail = (actual, expected, message, operator, stackStartFunction) ->
     failCount++
@@ -375,6 +549,7 @@ define "drews-mixins", ->
       expected: expected
       operator: operator
       stackStartFunction: stackStartFunction
+    console.log "ERROR!!"
     console.log e
     #throw new AssertionError e
   exports.assertPass = (actual, expected, message, operator, stackStartFunction) ->
@@ -395,8 +570,11 @@ define "drews-mixins", ->
       _.assertFail actual, expected, message, '!=', exports.assertNotEqual
     else
       _.assertPass actual, expected, message, '!=', exports.assertNotEqual
-
-
+  # some things like a FileList need this because _.each doesn't work
+  exports.eachArray = (arr, fn) ->
+    for v, k in arr
+      fn v, k 
+    arr
   _.mixin exports
   return exports
 #root._ if root._ is defined in parent script 
