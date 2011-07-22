@@ -271,7 +271,7 @@ define "drews-mixins", ->
     obj[key].push value
 
   setLocation = (stuff, cb) ->
-  log = (args...) -> console.log args... 
+  log = (args...) -> console?.log args... 
   exports.log = log
 
   hosty = null 
@@ -423,7 +423,7 @@ define "drews-mixins", ->
         id : _.uuid() 
       , (err, data) ->
         {result, error, id} = data 
-        callback (error or err), result
+        callback? (error or err), result
 
   metaObjects = {}
   meta = (obj, defaulto={}) ->
@@ -453,39 +453,43 @@ define "drews-mixins", ->
   # one ting is member_missing
   # another thing is aop beforecall after call
   # this is just a member missing deal 
+  # stooges = [{name : 'curly', age : 25}, {name : 'moe', age : 21}, {name : 'larry', age : 23}]
+  #  log (p stooges)("sortBy")((stooge) -> stooge.age)(_.map)((s) -> s.name == "larry")()
+  #  log (p stooges)("sortBy")((stooge) -> stooge.age)("map")((s) -> s.name == "larry")()
+
+  #  a =
+  #    name: "drew"
+  #    member_missing: (obj, member) ->
+  #      return "yes I can #{member}"
+
+  #  for thing in ["run", "name", "walk", "jog"]
+  #    log (p a, thing)
+
+  #  (p a, "walk")
+    
+      
   polymorphic = (args...) ->
     withMember = (member, obj, chained=false) -> 
-      log "member: #{member}"
-      log "object"
-      log obj
       if _.isFunction(member)
-        ret = (args...) ->
-          member obj, args...
+        ret = (args...) -> member obj, args...
       else if (typeof obj == "object") and member of obj
-        log "#{member} is of "
-        log obj
         ret = obj[member]
-      else if (typeof obj == "object") and "member_missing" of obj
-        log "member_mission is of"
-        log obj
-        ret = obj.member_missing obj, member
+        if _.isFunction(ret)
+          ret = _.bind(ret, obj)
+      else if (typeof obj == "object") and "_lookup" of obj
+        ret = obj._lookup obj, member
+      
+      if ret == p.cont
       else
-        type = obj._type || (meta obj)?.type
+        type = obj._type #|| (meta obj)?.type
         if type
-          log "test for type"
           ret = (polymorphic type, member)
-        else if member of _ # is this last one going to far?
-            ret = (args...) ->
-              _(obj)[member] args...
-            log "#{member} is of _"
+        else if member of _ #is this last one going to far?
+            ret = (args...) -> _(obj)[member] args...
         else
-          log "#{member} is not of _"
           ret = undefined
       if chained
         loopBack = (member) ->
-          log "looping back with #{member}"
-          log "ret is"
-          log ret
           if not member
             return ret
           else 
@@ -500,19 +504,29 @@ define "drews-mixins", ->
         return ret
     [obj, member] = args
     if args.length == 1
-      (member) ->
-        withMember member, obj, true
+      (member) -> withMember member, obj, true
     else
       withMember member, obj, false
     #(p listing, "save")
     #(p listing)("map")((x) -> x + 1)("select")((x) -> x == 1)()
-     
+  polymorphic.cont = "continue looking up"
+  p = polymorphic
+  jsonObj = (obj) ->
+    ret = {}
+    jsonExclusions = (p obj, "jsonExclusions") || []
+    _.each obj (value, key) ->
+      if key not in jsonExclusions
+        if typeof value is "object"
+          value = jsonObj value
+        ret[key] = value
+    ret
 
 
 
 
   _.extend exports, {jsonPost, jsonGet, jsonHttpMaker,
-    jsonRpcMaker, meta, set, metaMaker, polymorphic}
+    jsonRpcMaker, meta, set, metaMaker, polymorphic,
+    jsonObj}
 
 
       
@@ -549,8 +563,6 @@ define "drews-mixins", ->
       expected: expected
       operator: operator
       stackStartFunction: stackStartFunction
-    console.log "ERROR!!"
-    console.log e
     #throw new AssertionError e
   exports.assertPass = (actual, expected, message, operator, stackStartFunction) ->
     passCount++

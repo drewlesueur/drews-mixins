@@ -32,7 +32,7 @@
     return AssertionError;
   })();
   define("drews-mixins", function() {
-    var addToObject, addToObjectMaker, errorHandleMaker, exports, hosty, jsonGet, jsonHttpMaker, jsonPost, jsonRpcMaker, log, meta, metaMaker, metaObjects, polymorphic, postMessageHelper, set, setLocation, times, trigger, _;
+    var addToObject, addToObjectMaker, errorHandleMaker, exports, hosty, jsonGet, jsonHttpMaker, jsonObj, jsonPost, jsonRpcMaker, log, meta, metaMaker, metaObjects, p, polymorphic, postMessageHelper, set, setLocation, times, trigger, _;
     _ = require("underscore");
     exports = {};
     exports.asyncEx = function(len, cb) {
@@ -339,7 +339,7 @@
     log = function() {
       var args;
       args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      return console.log.apply(console, args);
+      return typeof console !== "undefined" && console !== null ? console.log.apply(console, args) : void 0;
     };
     exports.log = log;
     hosty = null;
@@ -510,7 +510,7 @@
         }, function(err, data) {
           var error, id, result;
           result = data.result, error = data.error, id = data.id;
-          return callback(error || err, result);
+          return typeof callback === "function" ? callback(error || err, result) : void 0;
         });
       };
     };
@@ -560,13 +560,10 @@
       var args, member, obj, withMember;
       args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
       withMember = function(member, obj, chained) {
-        var loopBack, ret, type, _ref;
+        var loopBack, ret, type;
         if (chained == null) {
           chained = false;
         }
-        log("member: " + member);
-        log("object");
-        log(obj);
         if (_.isFunction(member)) {
           ret = function() {
             var args;
@@ -574,35 +571,29 @@
             return member.apply(null, [obj].concat(__slice.call(args)));
           };
         } else if ((typeof obj === "object") && member in obj) {
-          log("" + member + " is of ");
-          log(obj);
           ret = obj[member];
-        } else if ((typeof obj === "object") && "member_missing" in obj) {
-          log("member_mission is of");
-          log(obj);
-          ret = obj.member_missing(obj, member);
-        } else {
-          type = obj._type || ((_ref = meta(obj)) != null ? _ref.type : void 0);
+          if (_.isFunction(ret)) {
+            ret = _.bind(ret, obj);
+          }
+        } else if ((typeof obj === "object") && "_lookup" in obj) {
+          ret = obj._lookup(obj, member);
+        }
+        if (ret === p.cont) {} else {
+          type = obj._type;
           if (type) {
-            log("test for type");
             ret = polymorphic(type, member);
           } else if (member in _) {
             ret = function() {
-              var args, _ref2;
+              var args, _ref;
               args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-              return (_ref2 = _(obj))[member].apply(_ref2, args);
+              return (_ref = _(obj))[member].apply(_ref, args);
             };
-            log("" + member + " is of _");
           } else {
-            log("" + member + " is not of _");
             ret = void 0;
           }
         }
         if (chained) {
           loopBack = function(member) {
-            log("looping back with " + member);
-            log("ret is");
-            log(ret);
             if (!member) {
               return ret;
             } else {
@@ -632,6 +623,22 @@
         return withMember(member, obj, false);
       }
     };
+    polymorphic.cont = "continue looking up";
+    p = polymorphic;
+    jsonObj = function(obj) {
+      var jsonExclusions, ret;
+      ret = {};
+      jsonExclusions = (p(obj, "jsonExclusions")) || [];
+      _.each(obj(function(value, key) {
+        if (__indexOf.call(jsonExclusions, key) < 0) {
+          if (typeof value === "object") {
+            value = jsonObj(value);
+          }
+          return ret[key] = value;
+        }
+      }));
+      return ret;
+    };
     _.extend(exports, {
       jsonPost: jsonPost,
       jsonGet: jsonGet,
@@ -640,7 +647,8 @@
       meta: meta,
       set: set,
       metaMaker: metaMaker,
-      polymorphic: polymorphic
+      polymorphic: polymorphic,
+      jsonObj: jsonObj
     });
     /*    
     do ->
@@ -673,15 +681,13 @@
       failCount++;
       count++;
       failedMessages.push(message);
-      e = {
+      return e = {
         message: message,
         actual: actual,
         expected: expected,
         operator: operator,
         stackStartFunction: stackStartFunction
       };
-      console.log("ERROR!!");
-      return console.log(e);
     };
     exports.assertPass = function(actual, expected, message, operator, stackStartFunction) {
       passCount++;
