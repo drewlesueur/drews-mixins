@@ -37,7 +37,7 @@
     define = function() {
       var args, name, ret, _i;
       args = 3 <= arguments.length ? __slice.call(arguments, 0, _i = arguments.length - 2) : (_i = 0, []), name = arguments[_i++], ret = arguments[_i++];
-      return typeof module !== "undefined" && module !== null ? module.exports = ret : void 0;
+      return typeof module !== "undefined" && module !== null ? module.exports = ret() : void 0;
     };
   };
   define("drews-mixins", function() {
