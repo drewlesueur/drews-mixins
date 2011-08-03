@@ -20,8 +20,10 @@ class AssertionError extends Error
     [@name + ':', @message].join ' '
 
     # wait for
+define ?= (args..., name, ret) -> module?.exports = ret
+
 define "drews-mixins", ->
-  _ = require "underscore";
+  _ = require "underscore"
   exports = {}
   exports.asyncEx = (len, cb) ->
     _.wait len, -> cb null, len 
