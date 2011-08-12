@@ -158,8 +158,7 @@
         for (i = 0, _len = list.length; i < _len; i++) {
           item = list[i];
           callback = list[i];
-          if (!callback) {} else {
-            args = both ? args : args.unshift(eventName);
+          if (callback) {
             callback.apply(obj, args);
           }
         }

@@ -123,10 +123,7 @@ define "drews-mixins", ->
       list = list.slice() #stole this from node.js events
       for item, i in list
         callback = list[i]
-        if not callback
-
-        else
-          args = if both then args else args.unshift(eventName)
+        if callback
           # maby have obj as the first param?
           callback.apply obj, args
     obj
