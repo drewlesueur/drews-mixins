@@ -31,15 +31,13 @@
     };
     return AssertionError;
   })();
-    if (typeof define !== "undefined" && define !== null) {
-    define;
-  } else {
+  if (typeof define === "undefined" || define === null) {
     define = function() {
       var args, name, ret, _i;
       args = 3 <= arguments.length ? __slice.call(arguments, 0, _i = arguments.length - 2) : (_i = 0, []), name = arguments[_i++], ret = arguments[_i++];
       return typeof module !== "undefined" && module !== null ? module.exports = ret() : void 0;
     };
-  };
+  }
   define("drews-mixins", function() {
     var addToObject, addToObjectMaker, errorHandleMaker, exports, hosty, jsonGet, jsonHttpMaker, jsonObj, jsonPost, jsonRpcMaker, log, meta, metaMaker, metaObjects, p, polymorphic, postMessageHelper, set, setLocation, times, trigger, _;
     _ = require("underscore");
@@ -149,32 +147,24 @@
       return obj;
     };
     trigger = function() {
-      var args, both, callback, calls, ev, eventName, i, id, item, list, obj, _results;
-      obj = arguments[0], eventName = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
-      both = 2;
-      id = _.uniqueId();
+      var args, callback, calls, ev, i, item, list, obj, _len;
+      obj = arguments[0], ev = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
       if (!(calls = obj._callbacks)) {
         return obj;
       }
-      _results = [];
-      while (both--) {
-        ev = both ? eventName : "all";
-        list = calls[ev];
-        _results.push((function() {
-          var _len, _results2;
-          if (list = calls[ev]) {
-            list = list.slice();
-            _results2 = [];
-            for (i = 0, _len = list.length; i < _len; i++) {
-              item = list[i];
-              callback = list[i];
-              _results2.push(!callback ? void 0 : (args = both ? args : args.unshift(eventName), callback.apply(obj, args)));
-            }
-            return _results2;
+      list = calls[ev];
+      if (list = calls[ev]) {
+        list = list.slice();
+        for (i = 0, _len = list.length; i < _len; i++) {
+          item = list[i];
+          callback = list[i];
+          if (!callback) {} else {
+            args = both ? args : args.unshift(eventName);
+            callback.apply(obj, args);
           }
-        })());
+        }
       }
-      return _results;
+      return obj;
     };
     exports.trigger = trigger;
     exports.emit = exports.trigger;
@@ -185,10 +175,11 @@
       g = function() {
         var args;
         args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-        _.removeListener(obj, ev, g);
+        exports.removeListener(obj, ev, g);
         return callback.apply(obj, args);
       };
-      return _.addListener(obj, ev, g);
+      exports.addListener(obj, ev, g);
+      return obj;
     };
     exports.graceful = function(errorFunc, callback) {
       var extraArgs, makeHandler;
@@ -245,6 +236,12 @@
       return _.s(str, 0, with_what.length) === with_what;
     };
     exports.rnd = function(low, high) {
+      if (low == null) {
+        low = 0;
+      }
+      if (high == null) {
+        high = 100;
+      }
       return Math.floor(Math.random() * (high - low + 1)) + low;
     };
     exports.time = function() {

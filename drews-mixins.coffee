@@ -109,29 +109,27 @@ define "drews-mixins", ->
             break
     obj
   #TODO async events? wait 0, ->
-  trigger = (obj, eventName, args...) ->
-    both = 2
-    id = _.uniqueId()
+  trigger = (obj, ev, args...) ->
+    #ev is eventname
     if !(calls = obj._callbacks) then return obj
-    while both--
-      ev = if both then eventName else  "all"
-      list = calls[ev]
-      
-      if list=calls[ev]
-        # then next line coppies the array
-        # so it doesn't get shrinked by a once
-        # backbone.js has maybe a more efficient way
-        # where unbind sets it to null, and here it slices them
-        # if they are null
-        list = list.slice() #stole this from node.js events
-        for item, i in list
-          callback = list[i]
-          if not callback
+    list = calls[ev]
+    
+    if list=calls[ev]
+      # then next line coppies the array
+      # so it doesn't get shrinked by a once
+      # backbone.js has maybe a more efficient way
+      # where unbind sets it to null, and here it slices them
+      # if they are null
+      list = list.slice() #stole this from node.js events
+      for item, i in list
+        callback = list[i]
+        if not callback
 
-          else
-            args = if both then args else args.unshift(eventName)
-            # maby have obj as the first param?
-            callback.apply obj, args
+        else
+          args = if both then args else args.unshift(eventName)
+          # maby have obj as the first param?
+          callback.apply obj, args
+    obj
   exports.trigger = trigger
   exports.emit = exports.trigger
   
@@ -139,9 +137,10 @@ define "drews-mixins", ->
   exports.unbind = exports.removeListener
   exports.once = (obj, ev, callback) ->
     g = (args...) ->
-      _.removeListener obj, ev, g
+      exports.removeListener obj, ev, g
       callback.apply obj, args 
-    _.addListener obj, ev, g
+    exports.addListener obj, ev, g
+    obj
   
   exports.graceful = (errorFunc, callback) ->
     if _.isArray errorFunc
@@ -192,7 +191,7 @@ define "drews-mixins", ->
   exports.startsWith = (str, with_what) ->
     _.s(str, 0, with_what.length) == with_what
   
-  exports.rnd = (low, high) -> Math.floor(Math.random() * (high-low+1)) + low
+  exports.rnd = (low=0, high=100) -> Math.floor(Math.random() * (high-low+1)) + low
 
   exports.time = () ->
     (new Date()).getTime()
@@ -235,6 +234,7 @@ define "drews-mixins", ->
 
   exports.compareArrays = (left, right) ->
     #not yet optimized
+    # there is an error in the duplication code
     inLeftNotRight = []
     inRightNotLeft = []
     inBoth = []
@@ -278,7 +278,7 @@ define "drews-mixins", ->
 
   hosty = null 
       
-    
+  #deprecated  
   postMessageHelper = (yourWin, origin, methods={}) ->
     self = {}
     host = {}
