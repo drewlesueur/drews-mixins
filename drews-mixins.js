@@ -468,24 +468,54 @@
     jsonHttpMaker = function(method) {
       var http;
       return http = function() {
-        var args, callback, contentType, data, url, _i, _ref;
+        var args, callback, contentType, data, req, url, urlLib, urlObj, _i, _ref;
         args = 2 <= arguments.length ? __slice.call(arguments, 0, _i = arguments.length - 1) : (_i = 0, []), callback = arguments[_i++];
         _ref = args, url = _ref[0], args = _ref[1], contentType = _ref[2];
         data = JSON.stringify(args || {});
-        return $.ajax({
-          url: "" + url,
-          type: method || "POST",
-          contentType: 'application/json' || contentType,
-          data: data,
-          dataType: 'json',
-          processData: false,
-          success: function(data) {
-            return callback(null, data);
-          },
-          error: function(data) {
-            return callback(JSON.parse(data.responseText));
-          }
-        });
+        if (typeof module !== "undefined" && module !== null ? module.exports : void 0) {
+          http = require("http");
+          urlLib = require("url");
+          urlObj = urlLib.parse(url);
+          req = http.request({
+            host: urlObj.hostname,
+            path: urlObj.path,
+            port: urlObj.port,
+            method: method || "POST",
+            headers: {
+              "Content-Type": "application/json" || contentType
+            }
+          }, function(res) {
+            var responseText;
+            responseText = "";
+            res.on("data", function(chunk) {
+              return responseText += chunk.toString();
+            });
+            res.on("end", function() {
+              return callback(null, JSON.parse(data));
+            });
+            return res.on("close", function(err) {
+              return callback(err);
+            });
+          });
+          return req.on("error", function(e) {
+            return callback(e);
+          });
+        } else {
+          return $.ajax({
+            url: "" + url,
+            type: method || "POST",
+            contentType: 'application/json' || contentType,
+            data: data,
+            dataType: 'json',
+            processData: false,
+            success: function(data) {
+              return callback(null, data);
+            },
+            error: function(data) {
+              return callback(JSON.parse(data.responseText));
+            }
+          });
+        }
       };
     };
     jsonPost = jsonHttpMaker("POST");

@@ -386,16 +386,39 @@ define "drews-mixins", ->
       [url, args, contentType] = args
       #TODOO: why does the {} work?
       data = JSON.stringify args || {}
-      $.ajax 
-        url: "#{url}"
-        type: method || "POST"
-        contentType: 'application/json' || contentType
-        data: data
-        dataType: 'json'
-        processData: false
-        success: (data) -> callback null, data
-        error: (data) -> 
-          callback JSON.parse data.responseText
+      if module?.exports #if node.js
+        http = require "http"
+        urlLib = require "url"
+        urlObj = urlLib.parse url
+        req = http.request
+          host: urlObj.hostname
+          path: urlObj.path
+          port: urlObj.port 
+          method: method or "POST"
+          headers:
+            "Content-Type": "application/json"
+          (res) ->
+            responseText = ""
+            res.on "data", (chunk) ->
+              responseText += chunk.toString()
+            res.on "end", () ->
+              callback null, JSON.parse data
+            res.on "close", (err) ->
+              callback err
+        req.on "error", (e) -> callback e
+        req.write data
+        req.end()
+      else
+        $.ajax 
+          url: "#{url}"
+          type: method || "POST"
+          contentType: 'application/json' || contentType
+          data: data
+          dataType: 'json'
+          processData: false
+          success: (data) -> callback null, data
+          error: (data) -> 
+            callback JSON.parse data.responseText
   jsonPost = jsonHttpMaker "POST"
   jsonGet = jsonHttpMaker "GET"
   jsonHttpMaker = jsonHttpMaker
