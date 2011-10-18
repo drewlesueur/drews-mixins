@@ -1,36 +1,10 @@
 (function() {
-  var AssertionError, count, failCount, failedMessages, passCount;
-  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }, __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
-    for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
-    function ctor() { this.constructor = child; }
-    ctor.prototype = parent.prototype;
-    child.prototype = new ctor;
-    child.__super__ = parent.prototype;
-    return child;
-  }, __slice = Array.prototype.slice, __indexOf = Array.prototype.indexOf || function(item) {
+  var __slice = Array.prototype.slice, __indexOf = Array.prototype.indexOf || function(item) {
     for (var i = 0, l = this.length; i < l; i++) {
       if (this[i] === item) return i;
     }
     return -1;
   };
-  failCount = 0;
-  passCount = 0;
-  count = 0;
-  failedMessages = [];
-  AssertionError = (function() {
-    __extends(AssertionError, Error);
-    function AssertionError(options) {
-      this.toString = __bind(this.toString, this);      this.name = 'AssertionError';
-      this.message = options.message;
-      this.actual = options.actual;
-      this.expected = options.expected;
-      this.operator = options.operator;
-    }
-    AssertionError.prototype.toString = function() {
-      "test";      return [this.name + ':', this.message].join(' ');
-    };
-    return AssertionError;
-  })();
   if (typeof define === "undefined" || define === null) {
     define = function() {
       var args, name, ret, _i;
@@ -42,16 +16,65 @@
     var addToObject, addToObjectMaker, errorHandleMaker, exports, hosty, jsonGet, jsonHttpMaker, jsonObj, jsonPost, jsonRpcMaker, log, meta, metaMaker, metaObjects, p, polymorphic, postMessageHelper, set, setLocation, times, trigger, _;
     _ = require("underscore");
     exports = {};
-    exports.asyncEx = function(len, cb) {
-      return _.wait(len, function() {
-        return cb(null, len);
-      });
-    };
-    exports.asyncFail = function(len, cb) {
-      return _.wait(len, function() {
-        return cb(len);
-      });
-    };
+    exports.testing = (function() {
+      var asyncTest, eq, equalish, failed, fin, init, ok, outStandingAsyncTests, start, success, test, testing, total;
+      success = 0;
+      total = 0;
+      failed = false;
+      outStandingAsyncTests = 0;
+      start = 0;
+      testing = {};
+      init = function() {
+        if (start === 0) {
+          return start = new Date;
+        }
+      };
+      fin = testing.fin = function() {
+        var msg, sec, yay;
+        if (outStandingAsyncTests === 0) {
+          yay = success === total && !failed;
+          sec = (new Date - start) / 1000;
+          msg = "passed " + success + " tests in " + (sec.toFixed(2)) + " seconds";
+          if (!yay) {
+            msg = "failed " + (total - success) + " tests and " + msg;
+          }
+          return console.log(msg, yay);
+        }
+      };
+      ok = testing.ok = function(val, message) {
+        init();
+        message || (message = "" + val + " is not true");
+        total += 1;
+        if (val) {
+          return success += 1;
+        } else {
+          throw Error(message);
+        }
+      };
+      eq = testing.eq = function(x, y, message) {
+        init();
+        message || (message = "" + x + " doesn't equal " + y);
+        return ok(x === y, message);
+      };
+      equalish = testing.equalish = function(x, y, message) {
+        init();
+        message || (message = "" + (JSON.stringify(x)) + " doesn't equal " + (JSON.stringify(y)));
+        return ok(_.isEqual(x, y), message);
+      };
+      test = testing.test = function(description, func) {
+        init();
+        return func();
+      };
+      asyncTest = testing.asyncTest = function(description, func) {
+        init();
+        outStandingAsyncTests += 1;
+        return func(function(err) {
+          outStandingAsyncTests -= 1;
+          return fin();
+        });
+      };
+      return testing;
+    })();
     exports.doneMaker2 = function() {
       var allDone, allDoneCallback, done, doneLength, hold, id, length, live;
       allDoneCallback = function() {};
@@ -471,35 +494,45 @@
         var args, callback, contentType, data, req, url, urlLib, urlObj, _i, _ref;
         args = 2 <= arguments.length ? __slice.call(arguments, 0, _i = arguments.length - 1) : (_i = 0, []), callback = arguments[_i++];
         _ref = args, url = _ref[0], args = _ref[1], contentType = _ref[2];
+        console.log(url);
         data = JSON.stringify(args || {});
         if (typeof module !== "undefined" && module !== null ? module.exports : void 0) {
           http = require("http");
           urlLib = require("url");
           urlObj = urlLib.parse(url);
+          console.log("port " + (urlObj.port || 80));
+          console.log(urlObj.hostname);
+          console.log(urlObj.pathname);
           req = http.request({
             host: urlObj.hostname,
-            path: urlObj.path,
+            path: urlObj.pathname,
             port: urlObj.port,
             method: method || "POST",
             headers: {
-              "Content-Type": "application/json" || contentType
+              "Content-Type": "application/json",
+              "Content-Length": data.length
             }
           }, function(res) {
             var responseText;
             responseText = "";
             res.on("data", function(chunk) {
+              console.log("--");
+              console.log(chunk.toString());
+              console.log("--");
               return responseText += chunk.toString();
             });
             res.on("end", function() {
-              return callback(null, JSON.parse(data));
+              return callback(null, JSON.parse(responseText));
             });
             return res.on("close", function(err) {
               return callback(err);
             });
           });
-          return req.on("error", function(e) {
+          req.on("error", function(e) {
             return callback(e);
           });
+          req.write(data);
+          return req.end();
         } else {
           return $.ajax({
             url: "" + url,
@@ -690,65 +723,6 @@
       giveBackTheCard = takeACard()
       giveBackTheCard()
     */
-    exports.getAssertCount = function() {
-      return count;
-    };
-    exports.getFailCount = function() {
-      return failCount;
-    };
-    exports.getPassCount = function() {
-      return passCount;
-    };
-    exports.setAssertCount = function(newCount) {
-      return count = newCount;
-    };
-    exports.setPassCount = function(newCount) {
-      return passCount = newCount;
-    };
-    exports.setFailCount = function(newCount) {
-      return failCount = newCount;
-    };
-    exports.getFailedMessages = function() {
-      return failedMessages;
-    };
-    exports.assertFail = function(actual, expected, message, operator, stackStartFunction) {
-      var e;
-      failCount++;
-      count++;
-      failedMessages.push(message);
-      return e = {
-        message: message,
-        actual: actual,
-        expected: expected,
-        operator: operator,
-        stackStartFunction: stackStartFunction
-      };
-    };
-    exports.assertPass = function(actual, expected, message, operator, stackStartFunction) {
-      passCount++;
-      return count++;
-    };
-    exports.assertOk = function(value, message) {
-      if (!!!value) {
-        return _.assertFail(value, true, message, '==', exports.assertOk);
-      } else {
-        return _.assertPass(value, true, message, "==", _.assertOk);
-      }
-    };
-    exports.assertEqual = function(actual, expected, message) {
-      if (actual != expected) {
-        return _.assertFail(actual, expected, message, '==', exports.assertEqual);
-      } else {
-        return _.assertPass(actual, expected, message, "==", exports.assertEqual);
-      }
-    };
-    exports.assertNotEqual = function(actual, expected, message) {
-      if (actual == expected) {
-        return _.assertFail(actual, expected, message, '!=', exports.assertNotEqual);
-      } else {
-        return _.assertPass(actual, expected, message, '!=', exports.assertNotEqual);
-      }
-    };
     exports.eachArray = function(arr, fn) {
       var k, v, _len;
       for (k = 0, _len = arr.length; k < _len; k++) {
