@@ -415,16 +415,12 @@ define "drews-mixins", ->
   jsonHttpMaker = (method) ->
     http = (args..., callback) ->
       [url, args, contentType] = args
-      console.log url
       #TODOO: why does the {} work?
       data = JSON.stringify args || {}
       if module?.exports #if node.js
         http = require "http"
         urlLib = require "url"
         urlObj = urlLib.parse url
-        console.log "port #{urlObj.port or 80}"
-        console.log urlObj.hostname
-        console.log urlObj.pathname
         req = http.request
           host: urlObj.hostname
           path: urlObj.pathname
@@ -436,9 +432,6 @@ define "drews-mixins", ->
           (res) ->
             responseText = ""
             res.on "data", (chunk) ->
-              console.log "--"
-              console.log chunk.toString();
-              console.log "--"
               responseText += chunk.toString()
             res.on "end", () ->
               callback null, JSON.parse responseText

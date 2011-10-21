@@ -494,15 +494,11 @@
         var args, callback, contentType, data, req, url, urlLib, urlObj, _i, _ref;
         args = 2 <= arguments.length ? __slice.call(arguments, 0, _i = arguments.length - 1) : (_i = 0, []), callback = arguments[_i++];
         _ref = args, url = _ref[0], args = _ref[1], contentType = _ref[2];
-        console.log(url);
         data = JSON.stringify(args || {});
         if (typeof module !== "undefined" && module !== null ? module.exports : void 0) {
           http = require("http");
           urlLib = require("url");
           urlObj = urlLib.parse(url);
-          console.log("port " + (urlObj.port || 80));
-          console.log(urlObj.hostname);
-          console.log(urlObj.pathname);
           req = http.request({
             host: urlObj.hostname,
             path: urlObj.pathname,
@@ -516,9 +512,6 @@
             var responseText;
             responseText = "";
             res.on("data", function(chunk) {
-              console.log("--");
-              console.log(chunk.toString());
-              console.log("--");
               return responseText += chunk.toString();
             });
             res.on("end", function() {
