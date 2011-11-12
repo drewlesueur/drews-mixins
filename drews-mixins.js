@@ -1,17 +1,18 @@
 (function() {
-  var __slice = Array.prototype.slice, __indexOf = Array.prototype.indexOf || function(item) {
-    for (var i = 0, l = this.length; i < l; i++) {
-      if (this[i] === item) return i;
-    }
-    return -1;
-  };
-  if (typeof define === "undefined" || define === null) {
-    define = function() {
-      var args, name, ret, _i;
-      args = 3 <= arguments.length ? __slice.call(arguments, 0, _i = arguments.length - 2) : (_i = 0, []), name = arguments[_i++], ret = arguments[_i++];
-      return typeof module !== "undefined" && module !== null ? module.exports = ret() : void 0;
+  var a, definir;
+  var __slice = Array.prototype.slice, __hasProp = Object.prototype.hasOwnProperty, __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (__hasProp.call(this, i) && this[i] === item) return i; } return -1; };
+
+  a = 1;
+
+  if (typeof module !== "undefined" && module !== null ? module.exports : void 0) {
+    definir = function() {
+      var args, ret, _i;
+      args = 2 <= arguments.length ? __slice.call(arguments, 0, _i = arguments.length - 1) : (_i = 0, []), ret = arguments[_i++];
+      return module.exports = ret();
     };
+    define = difinir;
   }
+
   define("drews-mixins", function() {
     var addToObject, addToObjectMaker, errorHandleMaker, exports, hosty, jsonGet, jsonHttpMaker, jsonObj, jsonPost, jsonRpcMaker, log, meta, metaMaker, metaObjects, p, polymorphic, postMessageHelper, set, setLocation, times, trigger, _;
     _ = require("underscore");
@@ -25,9 +26,7 @@
       start = 0;
       testing = {};
       init = function() {
-        if (start === 0) {
-          return start = new Date;
-        }
+        if (start === 0) return start = new Date;
       };
       fin = testing.fin = function() {
         var msg, sec, yay;
@@ -35,9 +34,7 @@
           yay = success === total && !failed;
           sec = (new Date - start) / 1000;
           msg = "passed " + success + " tests in " + (sec.toFixed(2)) + " seconds";
-          if (!yay) {
-            msg = "failed " + (total - success) + " tests and " + msg;
-          }
+          if (!yay) msg = "failed " + (total - success) + " tests and " + msg;
           return console.log(msg, yay);
         }
       };
@@ -86,13 +83,9 @@
       doneLength = 0;
       live = true;
       done = function(err) {
-        if (live === false) {
-          return;
-        }
+        if (live === false) return;
         doneLength++;
-        if (err) {
-          allDoneCallback(err);
-        }
+        if (err) allDoneCallback(err);
         if (doneLength === length) {
           allDoneCallback(null);
           return live = false;
@@ -120,13 +113,9 @@
         length++;
         return (function(myLength) {
           return function(err, result) {
-            if (live === false) {
-              return;
-            }
+            if (live === false) return;
             doneLength++;
-            if (err) {
-              allDoneCallback(err, results);
-            }
+            if (err) allDoneCallback(err, results);
             results[myLength] = result;
             if (doneLength === length) {
               allDoneCallback(null, results);
@@ -155,9 +144,7 @@
           calls[ev] = [];
         } else {
           list = calls[ev];
-          if (!list) {
-            return obj;
-          }
+          if (!list) return obj;
           for (i = 0, _len = list.length; i < _len; i++) {
             item = list[i];
             if (callback === list[i]) {
@@ -172,18 +159,14 @@
     trigger = function() {
       var args, callback, calls, ev, i, item, list, obj, _len;
       obj = arguments[0], ev = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
-      if (!(calls = obj._callbacks)) {
-        return obj;
-      }
+      if (!(calls = obj._callbacks)) return obj;
       list = calls[ev];
       if (list = calls[ev]) {
         list = list.slice();
         for (i = 0, _len = list.length; i < _len; i++) {
           item = list[i];
           callback = list[i];
-          if (callback) {
-            callback.apply(obj, args);
-          }
+          if (callback) callback.apply(obj, args);
         }
       }
       return obj;
@@ -215,9 +198,7 @@
         return function() {
           var err, results;
           err = arguments[0], results = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
-          if (err) {
-            return errorFunc.apply(null, null, null);
-          }
+          if (err) return errorFunc.apply(null, null, null);
           return func.apply(null, results);
         };
       };
@@ -258,12 +239,8 @@
       return _.s(str, 0, with_what.length) === with_what;
     };
     exports.rnd = function(low, high) {
-      if (low == null) {
-        low = 0;
-      }
-      if (high == null) {
-        high = 100;
-      }
+      if (low == null) low = 0;
+      if (high == null) high = 100;
       return Math.floor(Math.random() * (high - low + 1)) + low;
     };
     exports.time = function() {
@@ -272,13 +249,9 @@
     exports.replaceBetween = function(str, start, between, end) {
       var endpos, pos;
       pos = str.indexOf(start);
-      if (pos === -1) {
-        return str;
-      }
+      if (pos === -1) return str;
       endpos = str.indexOf(end, pos + start.length);
-      if (endpos === -1) {
-        return str;
-      }
+      if (endpos === -1) return str;
       return _.s(str, 0, pos + start.length) + between + _.s(str, endpos);
     };
     exports.trimLeft = function(obj) {
@@ -288,12 +261,8 @@
       return obj.toString().replace(/\s+$/, "");
     };
     exports.isNumeric = function(str) {
-      if (_.isNumber(str)) {
-        return true;
-      }
-      if (_.s(str, 0, 1) === "-") {
-        return true;
-      }
+      if (_.isNumber(str)) return true;
+      if (_.s(str, 0, 1) === "-") return true;
       if (_.s(str, 0, 1).match(/\d/)) {
         return true;
       } else {
@@ -332,9 +301,7 @@
       }
       for (_j = 0, _len2 = right.length; _j < _len2; _j++) {
         item = right[_j];
-        if (__indexOf.call(left, item) < 0) {
-          inRightNotLeft.push(item);
-        }
+        if (__indexOf.call(left, item) < 0) inRightNotLeft.push(item);
       }
       dupLeft = [];
       dupRight = [];
@@ -358,9 +325,7 @@
       return 1;
     };
     exports.populateArray = function(obj, key, value) {
-      if (!_.isArray(obj[key])) {
-        obj[key] = [];
-      }
+      if (!_.isArray(obj[key])) obj[key] = [];
       return obj[key].push(value);
     };
     setLocation = function(stuff, cb) {};
@@ -373,9 +338,7 @@
     hosty = null;
     postMessageHelper = function(yourWin, origin, methods) {
       var callbacks, events, host, self;
-      if (methods == null) {
-        methods = {};
-      }
+      if (methods == null) methods = {};
       self = {};
       host = {};
       self.addMethods = function(fns) {
@@ -420,9 +383,7 @@
       $(window).bind("message", function(e) {
         var error, id, message, method, params, result;
         e = e.originalEvent;
-        if (e.origin !== origin && origin !== "*") {
-          return;
-        }
+        if (e.origin !== origin && origin !== "*") return;
         message = JSON.parse(e.data);
         if ("result" in message) {
           id = message.id, error = message.error, result = message.result;
@@ -431,12 +392,8 @@
           method = message.method, params = message.params, id = message.id;
           return typeof methods[method] === "function" ? methods[method].apply(methods, __slice.call(params).concat([function(err, result) {
             var response, responseString;
-            if (err == null) {
-              err = null;
-            }
-            if (result == null) {
-              result = null;
-            }
+            if (err == null) err = null;
+            if (result == null) result = null;
             response = {
               error: err,
               result: result,
@@ -466,9 +423,7 @@
           var args, cb, _i;
           args = 2 <= arguments.length ? __slice.call(arguments, 0, _i = arguments.length - 1) : (_i = 0, []), cb = arguments[_i++];
           return fn.apply(null, __slice.call(args).concat([function(err, result) {
-            if (err) {
-              handler(err, result);
-            }
+            if (err) handler(err, result);
             return cb(err, result);
           }]));
         });
@@ -559,7 +514,7 @@
             result: result
             error: err
             id: id
-      */
+    */
     jsonRpcMaker = function(url) {
       return function() {
         var args, callback, method, _i;
@@ -578,12 +533,8 @@
     metaObjects = {};
     meta = function(obj, defaulto) {
       var __mid;
-      if (defaulto == null) {
-        defaulto = {};
-      }
-      if (!(typeof obj === "object")) {
-        return;
-      }
+      if (defaulto == null) defaulto = {};
+      if (!(typeof obj === "object")) return;
       if ("__mid" in obj) {
         return metaObjects[obj.__mid];
       } else {
@@ -605,15 +556,11 @@
           return trigger(obj, "change:" + key, key, newVal, oldVal);
         }
       });
-      if (changed.length > 0) {
-        return trigger(obj, "change", changed, oldVals);
-      }
+      if (changed.length > 0) return trigger(obj, "change", changed, oldVals);
     };
     metaMaker = function(val) {
       return function(obj, defaulto) {
-        if (defaulto == null) {
-          defaulto = {};
-        }
+        if (defaulto == null) defaulto = {};
         return (meta(obj))[val] || ((meta(obj))[val] = defaulto);
       };
     };
@@ -622,9 +569,7 @@
       args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
       withMember = function(member, obj, chained) {
         var loopBack, ret, type;
-        if (chained == null) {
-          chained = false;
-        }
+        if (chained == null) chained = false;
         if (_.isFunction(member)) {
           ret = function() {
             var args;
@@ -633,9 +578,7 @@
           };
         } else if ((typeof obj === "object") && member in obj) {
           ret = obj[member];
-          if (_.isFunction(ret)) {
-            ret = _.bind(ret, obj);
-          }
+          if (_.isFunction(ret)) ret = _.bind(ret, obj);
         } else if ((typeof obj === "object") && "_lookup" in obj) {
           ret = obj._lookup(obj, member);
         }
@@ -692,9 +635,7 @@
       jsonExclusions = (p(obj, "jsonExclusions")) || [];
       _.each(obj(function(value, key) {
         if (__indexOf.call(jsonExclusions, key) < 0) {
-          if (typeof value === "object") {
-            value = jsonObj(value);
-          }
+          if (typeof value === "object") value = jsonObj(value);
           return ret[key] = value;
         }
       }));
@@ -727,4 +668,5 @@
     _.mixin(exports);
     return exports;
   });
+
 }).call(this);
