@@ -2,7 +2,7 @@
 #this project used to have async helpers until i found @caolan's
 #nimble project
 if module?.exports
-  definir = (args..., ret) -> module.exports = ret()
+  difinir = (args..., ret) -> module.exports = ret()
   `define = difinir`
 
 define "drews-mixins", ->
