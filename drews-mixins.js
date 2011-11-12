@@ -5,7 +5,7 @@
   a = 1;
 
   if (typeof module !== "undefined" && module !== null ? module.exports : void 0) {
-    definir = function() {
+    difinir = function() {
       var args, ret, _i;
       args = 2 <= arguments.length ? __slice.call(arguments, 0, _i = arguments.length - 1) : (_i = 0, []), ret = arguments[_i++];
       return module.exports = ret();
