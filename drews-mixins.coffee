@@ -1,12 +1,9 @@
 #make sure you compile iwth -cw not -cwb
 #this project used to have async helpers until i found @caolan's
 #nimble project
-if module?.exports
-  difinir = (args..., ret) -> module.exports = ret()
-  `define = difinir`
 
-define "drews-mixins", ->
-  _ = require "underscore"
+dModule.define "drews-mixins", ->
+  _ = dModule.require "underscore"
   exports = {}
 
   exports.testing = do ->

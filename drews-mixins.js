@@ -1,21 +1,9 @@
 (function() {
-  var a, definir;
   var __slice = Array.prototype.slice, __hasProp = Object.prototype.hasOwnProperty, __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (__hasProp.call(this, i) && this[i] === item) return i; } return -1; };
 
-  a = 1;
-
-  if (typeof module !== "undefined" && module !== null ? module.exports : void 0) {
-    difinir = function() {
-      var args, ret, _i;
-      args = 2 <= arguments.length ? __slice.call(arguments, 0, _i = arguments.length - 1) : (_i = 0, []), ret = arguments[_i++];
-      return module.exports = ret();
-    };
-    define = difinir;
-  }
-
-  define("drews-mixins", function() {
+  dModule.define("drews-mixins", function() {
     var addToObject, addToObjectMaker, errorHandleMaker, exports, hosty, jsonGet, jsonHttpMaker, jsonObj, jsonPost, jsonRpcMaker, log, meta, metaMaker, metaObjects, p, polymorphic, postMessageHelper, set, setLocation, times, trigger, _;
-    _ = require("underscore");
+    _ = dModule.require("underscore");
     exports = {};
     exports.testing = (function() {
       var asyncTest, eq, equalish, failed, fin, init, ok, outStandingAsyncTests, start, success, test, testing, total;
