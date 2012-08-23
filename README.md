@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/drewlesueur/drews-mixins.png)](http://travis-ci.org/drewlesueur/drews-mixins)
 Drew's Mixins
 =============
 `drews-mixins` is a library of underscore.js mixins. You can
