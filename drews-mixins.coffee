@@ -2,34 +2,63 @@
 #this project used to have async helpers until i found @caolan's
 #nimble project
 
-failCount = 0
-passCount = 0
-count = 0
-failedMessages = []
-
-class AssertionError extends Error
-  constructor: (options) ->
-    @name = 'AssertionError'
-    @message = options.message
-    @actual = options.actual
-    @expected = options.expected
-    @operator = options.operator
-
-  toString: () =>
-    "test"
-    [@name + ':', @message].join ' '
-
-    # wait for
-define ?= (args..., name, ret) -> module?.exports = ret()
-
-define "drews-mixins", ->
-  _ = require "underscore"
+dModule.define "drews-mixins", ->
+  _ = dModule.require "underscore"
   exports = {}
-  exports.asyncEx = (len, cb) ->
-    _.wait len, -> cb null, len 
 
-  exports.asyncFail = (len, cb) ->
-    _.wait len, -> cb len
+  exports.testing = do ->
+    success = 0
+    total = 0
+    failed = false
+    outStandingAsyncTests = 0
+    start = 0
+
+    testing = {}
+
+    init = () ->
+      if start == 0
+        start = new Date
+
+    fin = testing.fin = () ->
+      if outStandingAsyncTests == 0
+        yay = success is total and not failed
+        sec = (new Date - start) / 1000
+        msg = "passed #{success} tests in #{ sec.toFixed 2 } seconds"
+        msg = "failed #{ total - success } tests and #{msg}" unless yay
+        console.log msg, yay
+    ok = testing.ok = (val, message) ->
+      init()
+      message or= "#{val} is not true"
+      total += 1
+      if val
+        success += 1
+      else
+        throw Error message
+
+    eq = testing.eq = (x, y, message) ->
+      init()
+      message or= "#{x} doesn't equal #{y}"
+      ok x is y, message
+
+    equalish = testing.equalish = (x, y, message) -> 
+      init()
+      message or= "#{JSON.stringify x} doesn't equal #{JSON.stringify y}"
+      ok _.isEqual(x, y), message
+
+    test = testing.test = (description, func) ->
+      init()
+      func()
+
+    asyncTest = testing.asyncTest = (description, func) ->
+      init()
+      outStandingAsyncTests += 1
+      func (err) ->
+        outStandingAsyncTests -= 1
+        fin()
+
+    testing
+
+
     
   exports.doneMaker2 = () ->
     allDoneCallback = ->
@@ -83,9 +112,11 @@ define "drews-mixins", ->
   # https://github.com/maccman/spine/blob/master/spine.js
 
 
-  exports.on = (obj, ev, callback) ->
+  exports.on = (obj, ev, callback, thethis, args...) ->
     calls = obj._callbacks || obj._callbacks = {}
     list = calls[ev] || (calls[ev] = [])
+    if args.length
+      callback = _.bind(callback, thethis, args...)
     list.push callback
     obj._events = obj._callbacks
     obj
@@ -156,6 +187,16 @@ define "drews-mixins", ->
     else
       makeHandler
     
+  exports.makeEventful = (obj) ->
+    obj.on = (args...) ->
+      exports.on obj, args...
+    obj.emit = (args...) ->
+      exports.emit obj, args...
+    obj.removeEventListener = (args...) ->
+      exports.removeEventListener obj, args...
+    obj.once = (args...) ->
+      exports.once obj, args...
+    obj
 
   #simple substring/slice functionality
   # for arrays and strings
@@ -392,17 +433,18 @@ define "drews-mixins", ->
         urlObj = urlLib.parse url
         req = http.request
           host: urlObj.hostname
-          path: urlObj.path
-          port: urlObj.port 
+          path: urlObj.pathname
+          port: urlObj.port
           method: method or "POST"
           headers:
             "Content-Type": "application/json"
+            "Content-Length": data.length
           (res) ->
             responseText = ""
             res.on "data", (chunk) ->
               responseText += chunk.toString()
             res.on "end", () ->
-              callback null, JSON.parse data
+              callback null, JSON.parse responseText
             res.on "close", (err) ->
               callback err
         req.on "error", (e) -> callback e
@@ -567,43 +609,6 @@ define "drews-mixins", ->
     giveBackTheCard()
   ###
 
-  exports.getAssertCount = -> count
-  exports.getFailCount = -> failCount
-  exports.getPassCount =  -> passCount
-  exports.setAssertCount = (newCount) -> count = newCount
-  exports.setPassCount = (newCount) -> passCount = newCount
-  exports.setFailCount = (newCount) -> failCount = newCount
-  exports.getFailedMessages = () -> failedMessages
-    
-  exports.assertFail = (actual, expected, message, operator, stackStartFunction) ->
-    failCount++
-    count++
-    failedMessages.push message
-    e = 
-      message: message
-      actual: actual
-      expected: expected
-      operator: operator
-      stackStartFunction: stackStartFunction
-    #throw new AssertionError e
-  exports.assertPass = (actual, expected, message, operator, stackStartFunction) ->
-    passCount++
-    count++
-  exports.assertOk = (value, message) ->
-    if !!!value
-      _.assertFail value, true, message, '==', exports.assertOk
-    else
-      _.assertPass value, true, message, "==", _.assertOk 
-  exports.assertEqual = (actual, expected, message) ->
-    if `actual != expected`
-      _.assertFail actual, expected, message, '==', exports.assertEqual
-    else
-      _.assertPass actual, expected, message, "==", exports.assertEqual
-  exports.assertNotEqual = (actual, expected, message) ->
-    if `actual == expected`
-      _.assertFail actual, expected, message, '!=', exports.assertNotEqual
-    else
-      _.assertPass actual, expected, message, '!=', exports.assertNotEqual
   # some things like a FileList need this because _.each doesn't work
   exports.eachArray = (arr, fn) ->
     for v, k in arr
